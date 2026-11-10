@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/+$/, ""); // no trailing slash
 export const TOKEN_COOKIE = "pb_token";
 
 export const getToken = () => Cookies.get(TOKEN_COOKIE);
@@ -39,7 +39,8 @@ interface Opts {
 }
 
 export async function api<T = unknown>(path: string, { method = "GET", body, query, raw }: Opts = {}): Promise<T> {
-  const url = new URL(API_URL + path);
+  // API_URL may be absolute, or relative ("/api") when the API is served from the site's own domain.
+  const url = new URL(API_URL + path, typeof window === "undefined" ? "http://localhost" : window.location.origin);
   for (const [k, v] of Object.entries(query ?? {})) {
     if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
   }
