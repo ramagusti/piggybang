@@ -8,3 +8,24 @@
 !/docker-compose.yml
 !/piggybang-api/
 !/piggybang-web/
+
+# Secrets: never commit, anywhere in the repo (applies inside the projects too; rules below win over the list above).
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+auth.json
+*credentials*.json
+*service-account*.json
+*.sqlite
+*.sqlite3
+*.db
+# Laravel cached config contains every secret from .env
+piggybang-api/bootstrap/cache/*.php
