@@ -20,5 +20,7 @@ export function celebrate(
   big = false,
 ) {
   if (state === "dance" || state === "celebrate") fireConfetti(big);
-  toast(message, { icon: <Piggy state={state} size={28} /> });
+  // bang: confetti lands when the fuse reaches the pig (a single bang hits at ~1.1s)
+  if (state === "bang") setTimeout(() => fireConfetti(big), 1100);
+  toast(message, { icon: <Piggy state={state} size={32} />, duration: 4500 });
 }

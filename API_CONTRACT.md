@@ -17,7 +17,7 @@ Pagination (list endpoints marked *paginated*): `{ data: [...], meta: { current_
 ```ts
 User { id, name, email, avatar_url, locale: 'id'|'en', timezone, email_verified_at }
 Organization {
-  id, name, slug, plan: 'free'|'pro', effective_plan: 'free'|'pro',   // effective = pro while trialing
+  id, name, slug, plan: 'free'|'pro', effective_plan: 'free'|'pro', locked: boolean,   // effective = pro while trialing
   is_trialing: boolean, trial_ends_at, member_limit, whatsapp_mode: null|'byon'|'all_in',
   settings: { timezone, currency, date_format, onboarded: boolean, webhook_url? },
   role: 'owner'|'admin'|'member'|'viewer',            // current user's role
@@ -79,7 +79,7 @@ Roles → permissions:
 | Method | Path | Notes |
 |---|---|---|
 | GET | /organizations | `Organization[]` |
-| POST | /organizations | name, slug? → Organization (starts 14-day Pro trial) |
+| POST | /organizations | name, slug? → Organization. First owned team: free with a 3-day Pro trial. Further teams: `locked: true` until paid; every other org endpoint returns 402 `{code:'team_payment_required'}` except GET/DELETE org, switch and subscription/* |
 | GET | /organizations/{org} | Organization (`{org}` = id) |
 | PATCH | /organizations/{org} | name?, slug?, settings? (merged) |
 | DELETE | /organizations/{org} | owner only |

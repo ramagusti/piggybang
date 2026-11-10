@@ -16,16 +16,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResponsiveModal } from "@/components/shared/ResponsiveModal";
 import { queryKeys, useCurrentOrg } from "@/hooks/api";
+import { useFormat } from "@/hooks/use-utils";
 import { api } from "@/lib/api";
+import { TIERS } from "@/lib/plans";
 import { useAuthStore } from "@/stores/auth";
 import type { Organization } from "@/types";
 
 export function CreateOrgDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const t = useTranslations();
   const qc = useQueryClient();
+  const f = useFormat();
   const setCurrentOrg = useAuthStore((s) => s.setCurrentOrg);
   const [name, setName] = useState("");
   const [error, setError] = useState<string>();
+  const { orgs } = useCurrentOrg();
+  const paidOnly = orgs.some((o) => o.role === "owner"); // one free team per person
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -47,6 +52,7 @@ export function CreateOrgDialog({ open, onOpenChange }: { open: boolean; onOpenC
           <Input id="new-org" required value={name} onChange={(e) => setName(e.target.value)} placeholder={t("auth.teamPlaceholder")} />
           {error && <p className="text-sm text-danger">{error}</p>}
         </div>
+        {paidOnly && <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">{t("org.createPaidNote", { price: f.money(TIERS[0].monthly) })}</p>}
         <Button type="submit" className="w-full" disabled={!name}>
           {t("org.create")}
         </Button>

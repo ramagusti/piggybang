@@ -48,7 +48,7 @@ export function AllInConnectModal({ orgId, open, onOpenChange }: { orgId: number
         <ErrorState />
       ) : !pairing ? (
         <div className="grid place-items-center py-8">
-          <Piggy state="idle" size={72} className="animate-piggy-walk" label={t("whatsapp.connecting")} />
+          <Piggy state="fuse" size={72} className="animate-piggy-walk" label={t("whatsapp.connecting")} />
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 text-center">

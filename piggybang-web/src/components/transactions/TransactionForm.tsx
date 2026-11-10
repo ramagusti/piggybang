@@ -455,9 +455,9 @@ export function TransactionDialog({
     const net = Number(res?.metadata?.savings?.net_savings ?? NaN);
     if (total === 1) celebrate(t("delight.firstTx"), "dance", true);
     else if (total === 100)
-      celebrate(t("delight.hundredTx"), "celebrate", true);
+      celebrate(t("delight.hundredTx"), "bang", true);
     else if (prevSavings && Number(prevSavings.net_savings) <= 0 && net > 0)
-      celebrate(t("delight.savingsPositive"), "celebrate", true);
+      celebrate(t("delight.savingsPositive"), "bang", true);
     else if (exceeded)
       celebrate(t("delight.budgetExceeded", { cat: exceeded.name }), "worry");
     else celebrate(t("tx.saved"), "thumbsup");

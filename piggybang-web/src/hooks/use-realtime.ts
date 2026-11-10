@@ -15,39 +15,64 @@ interface RealtimeToken {
 }
 
 const TABLES = ["transactions", "savings", "bills"] as const;
+const POLL_MS = 20_000;
 
-/** Supabase Realtime → invalidate org queries. Silently does nothing when the API returns 204 (not configured). */
+/**
+ * Keeps every page of a team fresh: any change to its transactions, savings or bills (web or WhatsApp, any
+ * member) → refetch that team's queries. Supabase Realtime when available; the token (1h) is renewed a minute
+ * before it expires. If Realtime isn't configured or the connection fails, falls back to refetching every 20s
+ * while the tab is visible.
+ */
 export function useRealtime(orgId: number | undefined) {
   const qc = useQueryClient();
   const bumpNewTx = useUIStore((s) => s.bumpNewTx);
 
   useEffect(() => {
     if (!orgId) return;
-    let cleanup = () => {};
-    let cancelled = false;
+    let stopped = false;
+    let disconnect = () => {};
+    let renew: ReturnType<typeof setTimeout> | undefined;
+    let poll: ReturnType<typeof setInterval> | undefined;
+    const refresh = () => qc.invalidateQueries({ queryKey: queryKeys.org(orgId) });
+    const setPolling = (on: boolean) => {
+      if (on && !poll) poll = setInterval(() => document.visibilityState === "visible" && refresh(), POLL_MS);
+      if (!on && poll) poll = void clearInterval(poll);
+    };
 
-    api<RealtimeToken | undefined>(`/organizations/${orgId}/realtime-token`)
-      .then((cfg) => {
-        if (!cfg || cancelled) return;
-        const supabase = createClient(cfg.url, cfg.anon_key, { accessToken: async () => cfg.token });
-        supabase.realtime.setAuth(cfg.token);
-        const channels = TABLES.map((table) =>
-          supabase
-            .channel(`org:${orgId}:${table}`)
-            .on("postgres_changes", { event: "*", schema: cfg.schema ?? "public", table, filter: `organization_id=eq.${orgId}` }, (payload) => {
-              if (table === "transactions" && payload.eventType === "INSERT") bumpNewTx();
-              qc.invalidateQueries({ queryKey: queryKeys.org(orgId) });
-            })
-            .subscribe(),
-        );
-        // ponytail: token not refreshed before expires_at; re-fetch on expiry if sessions run long.
-        cleanup = () => channels.forEach((c) => supabase.removeChannel(c));
-      })
-      .catch(() => {});
+    async function connect() {
+      const cfg = await api<RealtimeToken | undefined>(`/organizations/${orgId}/realtime-token`).catch(() => undefined);
+      if (stopped) return;
+      disconnect();
+      if (!cfg) return setPolling(true); // not configured (204) or API error
+      const supabase = createClient(cfg.url, cfg.anon_key, { accessToken: async () => cfg.token });
+      supabase.realtime.setAuth(cfg.token);
+      const live = new Set<string>();
+      const channels = TABLES.map((table) =>
+        supabase
+          .channel(`org:${orgId}:${table}`)
+          .on("postgres_changes", { event: "*", schema: cfg.schema ?? "public", table, filter: `organization_id=eq.${orgId}` }, (payload) => {
+            if (table === "transactions" && payload.eventType === "INSERT") bumpNewTx();
+            refresh();
+          })
+          .subscribe((status) => {
+            if (status === "SUBSCRIBED") live.add(table);
+            else live.delete(table);
+            setPolling(live.size < TABLES.length); // poll only while a channel is down
+          }),
+      );
+      disconnect = () => {
+        channels.forEach((c) => supabase.removeChannel(c));
+        disconnect = () => {};
+      };
+      renew = setTimeout(connect, Math.max(30_000, new Date(cfg.expires_at).getTime() - Date.now() - 60_000));
+    }
+    connect();
 
     return () => {
-      cancelled = true;
-      cleanup();
+      stopped = true;
+      clearTimeout(renew);
+      setPolling(false);
+      disconnect();
     };
   }, [orgId, qc, bumpNewTx]);
 }

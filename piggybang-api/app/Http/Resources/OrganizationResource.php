@@ -22,6 +22,7 @@ class OrganizationResource extends JsonResource
             'slug' => $this->slug,
             'plan' => $this->plan,
             'effective_plan' => $this->effectivePlan(),
+            'locked' => $this->isLocked(), // extra team without a paid plan: only billing/switch/delete work
             'is_trialing' => (bool) $this->isTrialing(),
             'trial_ends_at' => $this->trial_ends_at?->toIso8601String(),
             'member_limit' => $this->memberCap(),

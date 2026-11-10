@@ -4,7 +4,6 @@ import { LogOut, Menu, Moon, Plus, Settings, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useQueryClient } from "@tanstack/react-query";
-import { InstallButton } from "@/components/shared/InstallButton";
 import { Logo } from "@/components/shared/Logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -58,13 +57,12 @@ export function Navbar() {
         <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("nav.openMenu")} onClick={() => setMobileNav(true)}>
           <Menu />
         </Button>
-        <Link href="/app/dashboard" aria-label="Piggybang" className="mr-2">
+        <Link href="/app/dashboard" aria-label="PiggyBang!" className="mr-2">
           <Logo className="hidden sm:inline-flex" />
           <Logo hideText className="sm:hidden" />
         </Link>
         <OrgSwitcher />
         <div className="ml-auto flex items-center gap-1">
-          <InstallButton />
           <span className="hidden md:inline-flex">
             <LanguageSwitcher />
           </span>

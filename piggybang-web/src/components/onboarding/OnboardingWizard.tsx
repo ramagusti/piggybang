@@ -73,7 +73,7 @@ export function OnboardingWizard({ org }: { org: Organization }) {
   if (step === "done") {
     return (
       <div className="space-y-6 text-center">
-        <Piggy state="celebrate" size={120} className="mx-auto" />
+        <Piggy state="bang" size={120} className="mx-auto" />
         <h1 className="text-2xl font-bold">{t("onboarding.doneTitle")}</h1>
         <div className="grid gap-4 sm:grid-cols-2">
           <Link href="/app/transactions" className="card-hover flex flex-col items-center gap-2 rounded-xl border bg-surface p-5">

@@ -188,6 +188,11 @@ button:not(:disabled):active { transform: scale(0.97); transition: transform 150
 .animate-piggy-walk { animation: piggy-walk 1.2s ease-in-out infinite; }
 .animate-piggy-wave { animation: piggy-wave 0.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 20% 90%; }
 .animate-piggy-zzz { animation: piggy-zzz 2s ease-in-out infinite; }
+/* PiggyBang! fuse spark (logo + mascot) */
+@keyframes fuse-spark { 0% { transform: scale(0.8) rotate(0deg) } 50% { transform: scale(1.18) rotate(22deg) } 100% { transform: scale(0.92) rotate(-14deg) } }
+@keyframes fuse-ember { 0% { opacity: 1; transform: translate(0, 0) } 100% { opacity: 0; transform: translate(var(--dx, 4px), var(--dy, -5px)) } }
+.animate-fuse-spark { animation: fuse-spark 0.32s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.animate-fuse-ember { animation: fuse-ember 0.7s ease-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-chat-in { opacity: 0; animation: chat-in 400ms ease-out forwards; }
 

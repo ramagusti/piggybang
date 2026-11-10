@@ -17,9 +17,9 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
   const { locale } = await params;
   const t = await getTranslations({ locale });
   return {
-    title: { default: "Piggybang", template: "%s · Piggybang" },
+    title: { default: "PiggyBang!", template: "%s · PiggyBang!" },
     description: t("landing.heroSubtitle"),
-    appleWebApp: { capable: true, title: "Piggybang", statusBarStyle: "default" },
+    appleWebApp: { capable: true, title: "PiggyBang!", statusBarStyle: "default" },
     icons: { apple: "/icons/apple-touch-icon.png" },
   };
 }

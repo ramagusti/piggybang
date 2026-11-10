@@ -16,7 +16,7 @@ class OrganizationService
 
     public static function create(User $owner, string $name, ?string $slug = null): Organization
     {
-        // One Pro trial per person: only their first owned team gets it.
+        // One free team (with its Pro trial) per person. Further teams they create must be paid (Organization::isLocked).
         $trial = ! Membership::where('user_id', $owner->id)->where('role', 'owner')->exists();
 
         return DB::transaction(function () use ($owner, $name, $slug, $trial) {
@@ -28,6 +28,7 @@ class OrganizationService
                 'member_limit' => Organization::FREE_MEMBER_LIMIT,
                 'settings' => ['timezone' => $owner->timezone ?? 'Asia/Jakarta', 'currency' => 'IDR', 'date_format' => 'd M Y', 'onboarded' => false],
                 'trial_ends_at' => $trial ? now()->addDays(self::TRIAL_DAYS) : null,
+                'paid_only' => ! $trial,
             ]);
             Membership::create([
                 'organization_id' => $org->id, 'user_id' => $owner->id, 'email' => $owner->email, 'role' => 'owner',

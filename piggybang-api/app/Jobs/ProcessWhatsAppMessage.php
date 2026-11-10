@@ -55,7 +55,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
             if (Cache::add("wa-unlinked:$from", 1, now()->addDay())) {
                 WhatsAppService::sendText($pnid, $from, $conn
                     ? '🐷 WhatsApp untuk '.$conn->organization->name.' butuh paket Pro. Aktifkan di menu Penagihan.'
-                    : '🐷 Nomor kamu belum terhubung ke Piggybang. Buka menu WhatsApp di dashboard untuk menghubungkan.', $token);
+                    : '🐷 Nomor kamu belum terhubung ke PiggyBang!. Buka menu WhatsApp di dashboard untuk menghubungkan.', $token);
             }
 
             return;

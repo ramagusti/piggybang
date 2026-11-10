@@ -55,13 +55,18 @@
     "create": "Create organization",
     "switch": "Switch organization",
     "noneTitle": "No team yet",
-    "noneBody": "Create a team to start tracking."
+    "noneBody": "Create a team to start tracking.",
+    "lockedTitle": "{name} needs a paid plan",
+    "lockedBody": "Every account gets 1 free team. Extra teams need a paid plan, from {price}/month. This team’s data is safe and opens again once paid.",
+    "lockedAskOwner": "This team has no active plan. Ask the team owner to activate it.",
+    "lockedCta": "Choose a plan",
+    "createPaidNote": "You already have 1 free team. Extra teams need a paid plan (from {price}/month) and can be used once paid."
   },
   "auth": {
     "login": "Log in",
     "logout": "Log out",
     "register": "Sign up",
-    "loginTitle": "Log in to Piggybang",
+    "loginTitle": "Log in to PiggyBang!",
     "registerTitle": "Create your account",
     "email": "Email",
     "password": "Password",
@@ -108,12 +113,10 @@
   "landing": {
     "heroTitle": "Track Money via WhatsApp",
     "heroSubtitle": "No app to open. Just message Piggy.",
-    "ctaPrimary": "Start Free — 14-Day Pro Trial",
+    "ctaPrimary": "Start Free",
     "ctaDemo": "See Demo",
-    "noCard": "No credit card required",
+    "noCard": "Free forever for 2 members. Try Pro for 3 days, no credit card.",
     "demoLabel": "Example WhatsApp chat with Piggy",
-    "demoUser": "coffee 25000",
-    "demoBot": "✅ Recorded:\n🔴 Food & Beverages\n💰 Rp 25.000\n🐷 Savings: -Rp 89 JT",
     "featureWaTitle": "WhatsApp",
     "featureWaBody": "Just send a chat and it's recorded.",
     "featureBudgetTitle": "Automatic Budgets",
@@ -132,7 +135,106 @@
     "planProCta": "Try 3 days free",
     "madeIn": "Made in Indonesia 🇮🇩",
     "tierBot": "WhatsApp bot: unlimited logging, {count} replies/month",
-    "tierYearly": "Yearly {price} (save {pct}%)"
+    "tierYearly": "Yearly {price} (save {pct}%)",
+    "chatsTitle": "Just chat. Piggy handles the rest.",
+    "chatsSubtitle": "Log spending, see what is left in your budgets, and get bill reminders, all from WhatsApp.",
+    "chats": {
+      "record": {
+        "messages": [
+          {
+            "from": "user",
+            "text": "coffee 25k",
+            "reaction": "✅"
+          },
+          {
+            "from": "user",
+            "text": "yesterday fuel 100k and parking 5k",
+            "time": "12:31",
+            "reaction": "✅"
+          },
+          {
+            "from": "user",
+            "text": "salary 15jt",
+            "time": "12:32",
+            "reaction": "✅"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: gajian *Rp 15.000.000* (Gaji) 🟢\n\n🐷 Tabungan siklus ini: *Rp 4.250.000*"
+          }
+        ]
+      },
+      "budget": {
+        "title": "Budget left, automatically",
+        "caption": "For every transaction in a budget, Piggy tells you what is left.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "makan siang 25rb",
+            "time": "12:05"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: makan siang *Rp 25.000* (Food & Beverages)\n\n🟢 Makan minggu ini: sisa Rp 175.000 dari Rp 200.000"
+          }
+        ]
+      },
+      "over": {
+        "title": "A warning before you overspend",
+        "caption": "Orange at 80% used, red once you go over.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "jajan boba 30rb",
+            "time": "16:40"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: jajan boba *Rp 30.000* (Food & Beverages)\n\n🟠 Jajan minggu ini: sisa Rp 15.000 dari Rp 150.000"
+          },
+          {
+            "from": "user",
+            "text": "martabak 40rb",
+            "time": "20:15"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: martabak *Rp 40.000* (Food & Beverages)\n\n🔴 Jajan minggu ini: lewat Rp 25.000 dari Rp 150.000"
+          }
+        ]
+      },
+      "reminder": {
+        "title": "Bill and payday reminders",
+        "caption": "Bills due within 3 days ride along on the reply.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "bensin 100k",
+            "time": "07:45"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: bensin *Rp 100.000* (Transportation)\n\n💡 Listrik 2 hari lagi: Rp 350.000\n💡 Internet jatuh tempo hari ini: Rp 416.800\n💡 Gajian (Gaji) 3 hari lagi"
+          }
+        ]
+      },
+      "ask": {
+        "title": "Ask anything",
+        "caption": "Spending, budgets, bills, savings: answered from your team data.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "pengeluaranku minggu ini?",
+            "time": "21:02"
+          },
+          {
+            "from": "bot",
+            "text": "📊 *Transaksi kamu* · 9 Nov – 15 Nov\n🔴 Pengeluaran: *Rp 482.000* (9 transaksi)\n\nTeratas per kategori:\n• Food & Beverages Rp 210.000\n• Transportation Rp 150.000\n• Groceries Rp 122.000"
+          }
+        ]
+      }
+    },
+    "planChoose": "Choose {name}"
   },
   "errors": {
     "notFound": "Page not found. Piggy is napping...",
@@ -349,7 +451,7 @@
   },
   "whatsapp": {
     "connect": "Connect WhatsApp",
-    "connectBody": "Link your WhatsApp to the Piggybang number, then log transactions right from chat.",
+    "connectBody": "Link your WhatsApp to the PiggyBang! number, then log transactions right from chat.",
     "phone": "Phone number",
     "sendCode": "Send Verification Code",
     "otp": "OTP code (from SMS)",
@@ -520,10 +622,11 @@
   },
   "pwa": {
     "install": "Install app",
-    "iosTitle": "Install Piggybang on your phone",
+    "iosTitle": "Install PiggyBang! on your phone",
     "iosStep1": "Tap the Share button at the bottom of Safari.",
     "iosStep2": "Choose \"Add to Home Screen\", then tap Add.",
-    "ok": "Got it"
+    "ok": "Got it",
+    "dismiss": "Close"
   },
   "calc": {
     "toggle": "Calculator",

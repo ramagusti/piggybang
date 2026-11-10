@@ -82,7 +82,7 @@ function Stepper({
   );
 }
 
-function CheckoutDialog({
+export function CheckoutDialog({
   orgId,
   sub,
   open,

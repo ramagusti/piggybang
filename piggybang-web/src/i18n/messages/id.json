@@ -55,13 +55,18 @@
     "create": "Buat organisasi",
     "switch": "Ganti organisasi",
     "noneTitle": "Belum punya tim",
-    "noneBody": "Buat tim untuk mulai mencatat keuangan."
+    "noneBody": "Buat tim untuk mulai mencatat keuangan.",
+    "lockedTitle": "{name} butuh paket berbayar",
+    "lockedBody": "Setiap akun dapat 1 tim gratis. Tim tambahan perlu paket berbayar, mulai {price}/bulan. Data tim ini aman dan terbuka lagi setelah dibayar.",
+    "lockedAskOwner": "Tim ini belum punya paket aktif. Minta pemilik tim untuk mengaktifkannya.",
+    "lockedCta": "Pilih paket",
+    "createPaidNote": "Kamu sudah punya 1 tim gratis. Tim tambahan perlu paket berbayar (mulai {price}/bulan) dan baru bisa dipakai setelah dibayar."
   },
   "auth": {
     "login": "Masuk",
     "logout": "Keluar",
     "register": "Daftar",
-    "loginTitle": "Masuk ke Piggybang",
+    "loginTitle": "Masuk ke PiggyBang!",
     "registerTitle": "Buat akun",
     "email": "Email",
     "password": "Kata Sandi",
@@ -108,12 +113,10 @@
   "landing": {
     "heroTitle": "Catat Keuangan via WhatsApp",
     "heroSubtitle": "Tidak perlu buka aplikasi. Cukup kirim pesan ke Piggy.",
-    "ctaPrimary": "Mulai Gratis — 14 Hari Trial Pro",
+    "ctaPrimary": "Mulai Gratis",
     "ctaDemo": "Lihat Demo",
-    "noCard": "Tanpa kartu kredit",
+    "noCard": "Gratis selamanya untuk 2 anggota. Coba Pro 3 hari, tanpa kartu kredit.",
     "demoLabel": "Contoh percakapan WhatsApp dengan Piggy",
-    "demoUser": "beli kopi 25000",
-    "demoBot": "✅ Dicatat:\n🔴 Food & Beverages\n💰 Rp 25.000\n🐷 Tabungan: -Rp 89 JT",
     "featureWaTitle": "WhatsApp",
     "featureWaBody": "Cukup kirim chat, transaksi langsung tercatat.",
     "featureBudgetTitle": "Budget Otomatis",
@@ -132,7 +135,106 @@
     "planProCta": "Coba 3 hari gratis",
     "madeIn": "Dibuat di Indonesia 🇮🇩",
     "tierBot": "Bot WhatsApp: catat tanpa batas, {count} balasan/bulan",
-    "tierYearly": "Tahunan {price} (hemat {pct}%)"
+    "tierYearly": "Tahunan {price} (hemat {pct}%)",
+    "chatsTitle": "Cukup chat. Piggy yang urus sisanya.",
+    "chatsSubtitle": "Catat pengeluaran, pantau sisa anggaran, dan diingatkan soal tagihan, semuanya dari WhatsApp.",
+    "chats": {
+      "record": {
+        "messages": [
+          {
+            "from": "user",
+            "text": "beli kopi 25rb",
+            "reaction": "✅"
+          },
+          {
+            "from": "user",
+            "text": "kemarin bensin 100k sama parkir 5rb",
+            "time": "12:31",
+            "reaction": "✅"
+          },
+          {
+            "from": "user",
+            "text": "gajian 15jt",
+            "time": "12:32",
+            "reaction": "✅"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: gajian *Rp 15.000.000* (Gaji) 🟢\n\n🐷 Tabungan siklus ini: *Rp 4.250.000*"
+          }
+        ]
+      },
+      "budget": {
+        "title": "Sisa anggaran, otomatis",
+        "caption": "Setiap transaksi yang masuk anggaran, Piggy kabari sisanya.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "makan siang 25rb",
+            "time": "12:05"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: makan siang *Rp 25.000* (Food & Beverages)\n\n🟢 Makan minggu ini: sisa Rp 175.000 dari Rp 200.000"
+          }
+        ]
+      },
+      "over": {
+        "title": "Peringatan sebelum kebablasan",
+        "caption": "Oranye saat 80% terpakai, merah saat lewat.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "jajan boba 30rb",
+            "time": "16:40"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: jajan boba *Rp 30.000* (Food & Beverages)\n\n🟠 Jajan minggu ini: sisa Rp 15.000 dari Rp 150.000"
+          },
+          {
+            "from": "user",
+            "text": "martabak 40rb",
+            "time": "20:15"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: martabak *Rp 40.000* (Food & Beverages)\n\n🔴 Jajan minggu ini: lewat Rp 25.000 dari Rp 150.000"
+          }
+        ]
+      },
+      "reminder": {
+        "title": "Pengingat tagihan & gajian",
+        "caption": "Tagihan yang jatuh tempo 3 hari lagi ikut muncul di balasan.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "bensin 100k",
+            "time": "07:45"
+          },
+          {
+            "from": "bot",
+            "text": "✅ Dicatat: bensin *Rp 100.000* (Transportation)\n\n💡 Listrik 2 hari lagi: Rp 350.000\n💡 Internet jatuh tempo hari ini: Rp 416.800\n💡 Gajian (Gaji) 3 hari lagi"
+          }
+        ]
+      },
+      "ask": {
+        "title": "Tanya apa saja",
+        "caption": "Pengeluaran, anggaran, tagihan, tabungan: jawabannya dari data tim kamu.",
+        "messages": [
+          {
+            "from": "user",
+            "text": "pengeluaranku minggu ini?",
+            "time": "21:02"
+          },
+          {
+            "from": "bot",
+            "text": "📊 *Transaksi kamu* · 9 Nov – 15 Nov\n🔴 Pengeluaran: *Rp 482.000* (9 transaksi)\n\nTeratas per kategori:\n• Food & Beverages Rp 210.000\n• Transportation Rp 150.000\n• Groceries Rp 122.000"
+          }
+        ]
+      }
+    },
+    "planChoose": "Pilih {name}"
   },
   "errors": {
     "notFound": "Halaman tidak ditemukan. Piggy lagi tidur...",
@@ -349,7 +451,7 @@
   },
   "whatsapp": {
     "connect": "Hubungkan WhatsApp",
-    "connectBody": "Hubungkan WhatsApp kamu ke nomor Piggybang, lalu catat transaksi langsung dari chat.",
+    "connectBody": "Hubungkan WhatsApp kamu ke nomor PiggyBang!, lalu catat transaksi langsung dari chat.",
     "phone": "Nomor HP",
     "sendCode": "Kirim Kode Verifikasi",
     "otp": "Kode OTP (dari SMS)",
@@ -520,10 +622,11 @@
   },
   "pwa": {
     "install": "Pasang Aplikasi",
-    "iosTitle": "Pasang Piggybang di HP",
+    "iosTitle": "Pasang PiggyBang! di HP",
     "iosStep1": "Ketuk tombol Bagikan di bawah layar Safari.",
     "iosStep2": "Pilih \"Tambah ke Layar Utama\", lalu ketuk Tambah.",
-    "ok": "Oke, paham"
+    "ok": "Oke, paham",
+    "dismiss": "Tutup"
   },
   "calc": {
     "toggle": "Kalkulator",

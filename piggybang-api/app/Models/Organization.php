@@ -11,7 +11,7 @@ class Organization extends Model
 {
     protected $guarded = [];
 
-    protected $casts = ['settings' => 'array', 'trial_ends_at' => 'datetime'];
+    protected $casts = ['settings' => 'array', 'trial_ends_at' => 'datetime', 'paid_only' => 'boolean'];
 
     protected $attributes = ['settings' => '{}'];
 
@@ -84,6 +84,15 @@ class Organization extends Model
     public function isTrialing(): bool
     {
         return $this->plan === 'free' && $this->trial_ends_at?->isFuture();
+    }
+
+    /**
+     * Each user gets one free team; any further team they create is paid_only. Such a team is locked
+     * (no data access, only billing/switch/delete) until it has a paid plan, and again if the plan lapses.
+     */
+    public function isLocked(): bool
+    {
+        return $this->paid_only && $this->plan !== 'pro';
     }
 
     public function effectivePlan(): string

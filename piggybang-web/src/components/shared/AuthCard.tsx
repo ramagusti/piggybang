@@ -17,7 +17,7 @@ export function AuthCard({
         <Link
           href="/"
           className="mb-8 flex justify-center"
-          aria-label="Piggybang"
+          aria-label="PiggyBang!"
         >
           <Logo />
         </Link>

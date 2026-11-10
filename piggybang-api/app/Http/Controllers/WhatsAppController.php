@@ -74,7 +74,7 @@ class WhatsAppController extends Controller
         $senders = WhatsAppSender::where('organization_id', $org->id)->where('last_message_at', '>', now()->subDay())->get();
         abort_if($senders->isEmpty(), 422, 'Kirim pesan apa saja ke nomor bot dari WhatsApp kamu dulu (aturan 24 jam Meta), lalu coba lagi.');
         foreach ($senders as $s) {
-            WhatsAppService::sendText($conn->phone_number_id, $s->phone, '🎉 Piggybang terhubung! Ini pesan uji coba.', WhatsAppService::tokenFor($conn));
+            WhatsAppService::sendText($conn->phone_number_id, $s->phone, '🎉 PiggyBang! terhubung! Ini pesan uji coba.', WhatsAppService::tokenFor($conn));
         }
 
         return ['message' => 'Pesan uji coba terkirim ke '.$senders->count().' nomor.'];
@@ -83,7 +83,7 @@ class WhatsAppController extends Controller
     private function requireMode(Organization $org, string $mode): void
     {
         // WhatsApp comes with Pro (incl. trial) on the shared Piggybang number. BYON is retired.
-        abort_if($mode === 'byon', 410, 'Nomor sendiri (BYON) tidak tersedia lagi. Pakai nomor Piggybang.');
+        abort_if($mode === 'byon', 410, 'Nomor sendiri (BYON) tidak tersedia lagi. Pakai nomor PiggyBang!.');
         if (! $org->isPro()) {
             abort(response()->json(['message' => 'WhatsApp tersedia di paket Pro. Upgrade di Penagihan.', 'code' => 'whatsapp_subscription_required'], 403));
         }

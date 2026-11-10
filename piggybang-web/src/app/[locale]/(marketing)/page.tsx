@@ -1,9 +1,9 @@
 import { BarChart3, Check, MessageCircle, Users } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Carousel } from "@/components/marketing/Carousel";
 import { DemoChat } from "@/components/marketing/DemoChat";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { Piggy } from "@/components/piggy/Piggy";
-import { InstallButton } from "@/components/shared/InstallButton";
 import { shortRp, TIERS, yearlySaving } from "@/lib/plans";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
       name: x.name,
       price: shortRp(x.monthly),
       items: [t("landing.tierYearly", { price: shortRp(x.yearly), pct: yearlySaving(x) }), t("landing.tierBot", { count: x.botReplies }), t("landing.planPro2"), t("landing.planPro3")],
-      cta: t("landing.planProCta"),
+      cta: x.key === "pro" ? t("landing.planProCta") : t("landing.planChoose", { name: x.name }), // the free trial is Pro
       href: "/register",
       featured: x.key === "plus",
     })),
@@ -35,11 +35,10 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
-          <Link href="/" aria-label="Piggybang">
+          <Link href="/" aria-label="PiggyBang!">
             <Logo />
           </Link>
           <div className="flex items-center gap-2">
-            <InstallButton />
             <Button variant="ghost" asChild>
               <Link href="/login">{t("auth.login")}</Link>
             </Button>
@@ -53,7 +52,7 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
       <main id="main" className="flex-1">
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:px-8 md:py-20">
           <div className="flex flex-col items-center gap-5 text-center md:items-start md:text-left">
-            <Piggy state="wave" size={96} />
+            <Piggy state="bang" loop size={96} />
             <h1 className="text-4xl font-extrabold tracking-tight text-balance md:text-5xl">{t("landing.heroTitle")}</h1>
             <p className="max-w-lg text-lg text-muted-foreground">{t("landing.heroSubtitle")}</p>
             <div className="flex flex-wrap justify-center gap-3 md:justify-start">
@@ -67,8 +66,24 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
             <p className="text-sm text-muted-foreground">{t("landing.noCard")}</p>
           </div>
           <div id="demo">
-            <DemoChat />
+            <DemoChat scene="record" className="mx-auto" />
           </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl py-12">
+          <h2 className="mb-2 px-4 text-center text-3xl font-bold">{t("landing.chatsTitle")}</h2>
+          <p className="mx-auto mb-8 max-w-2xl px-4 text-center text-muted-foreground">{t("landing.chatsSubtitle")}</p>
+          <Carousel>
+            {(["budget", "over", "reminder", "ask"] as const).map((scene) => (
+              <figure key={scene} className="flex w-full flex-col gap-3">
+                <figcaption className="min-h-16">
+                  <h3 className="font-semibold">{t(`landing.chats.${scene}.title`)}</h3>
+                  <p className="text-sm text-muted-foreground">{t(`landing.chats.${scene}.caption`)}</p>
+                </figcaption>
+                <DemoChat scene={scene} className="max-w-none flex-1" />
+              </figure>
+            ))}
+          </Carousel>
         </section>
 
         <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
@@ -113,7 +128,7 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-8 md:flex-row md:justify-between md:px-8">
           <div className="flex items-center gap-3">
             <Piggy state="wave" size={48} />
-            <span className="text-sm text-muted-foreground">© {new Date().getFullYear()} Piggybang · {t("landing.madeIn")}</span>
+            <span className="text-sm text-muted-foreground">© {new Date().getFullYear()} PiggyBang! · {t("landing.madeIn")}</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <a href="#pricing" className="hover:underline">

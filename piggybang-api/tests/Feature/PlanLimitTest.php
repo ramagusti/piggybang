@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organization;
 use App\Services\OrganizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -76,5 +77,26 @@ class PlanLimitTest extends TestCase
         $second = OrganizationService::create($owner, 'Tim Kedua');
         $this->assertFalse($second->isTrialing());
         $this->assertSame('free', $second->effectivePlan());
+    }
+
+    public function test_extra_teams_are_locked_until_paid(): void
+    {
+        [$owner, $first] = $this->makeOrg('free');
+        Sanctum::actingAs($owner, ['*']);
+        $this->getJson("/api/organizations/{$first->id}/transactions")->assertOk(); // the first team is free
+
+        $id = $this->postJson('/api/organizations', ['name' => 'Tim Kedua'])->assertCreated()->assertJsonPath('locked', true)->json('id');
+        $this->getJson("/api/organizations/$id/transactions")->assertStatus(402)->assertJsonPath('code', 'team_payment_required');
+        $this->postJson("/api/organizations/$id/transactions", [])->assertStatus(402);
+        $this->getJson("/api/organizations/$id")->assertOk();
+        $this->getJson("/api/organizations/$id/subscription")->assertOk(); // can still pay
+
+        Organization::find($id)->update(['plan' => 'pro']); // what BillingService::sync does on payment
+        $this->getJson("/api/organizations/$id/transactions")->assertOk();
+        $this->getJson("/api/organizations/$id")->assertJsonPath('locked', false);
+
+        Organization::find($id)->update(['plan' => 'free']); // plan lapsed → locked again, then deletable
+        $this->getJson("/api/organizations/$id/transactions")->assertStatus(402);
+        $this->deleteJson("/api/organizations/$id")->assertNoContent();
     }
 }

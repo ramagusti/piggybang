@@ -29,6 +29,7 @@ export interface Organization {
   slug: string;
   plan: "free" | "pro";
   effective_plan: "free" | "pro";
+  locked: boolean; // extra team without a paid plan
   is_trialing: boolean;
   trial_ends_at: string | null;
   member_limit: number;

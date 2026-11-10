@@ -24,7 +24,7 @@ class OrganizationInvitation extends Notification implements ShouldQueue
         $org = $this->membership->organization;
 
         return (new MailMessage)
-            ->subject("Undangan bergabung ke {$org->name} di Piggybang")
+            ->subject("Undangan bergabung ke {$org->name} di PiggyBang!")
             ->line("{$this->inviterName} mengundang kamu ke {$org->name}.")
             ->action('Gabung sekarang', rtrim(config('app.frontend_url'), '/').'/join/'.$this->membership->invitation_token)
             ->line('Belum punya akun? Kamu bisa daftar langsung dari link itu.');

@@ -23,7 +23,7 @@ class BillingService
     {
         $p = config("billing.prices.$currency");
         $sfx = $interval === 'yearly' ? 'yearly' : 'monthly';
-        $name = 'Piggybang '.config("billing.tiers.$tier.name");
+        $name = 'PiggyBang! '.config("billing.tiers.$tier.name");
         $items = [['key' => "{$tier}_$sfx", 'name' => $name, 'amount' => $p["{$tier}_$sfx"], 'quantity' => 1, 'recurring' => true]];
         if ($extraSeats > 0) {
             $items[] = ['key' => "seat_$sfx", 'name' => 'Kursi tambahan', 'amount' => $p["seat_$sfx"], 'quantity' => $extraSeats, 'recurring' => true];
@@ -226,7 +226,7 @@ class BillingService
                 if ($sub) {
                     Invoice::updateOrCreate(['provider_invoice_id' => $obj['id']], [
                         'organization_id' => $sub->organization_id, 'subscription_id' => $sub->id, 'provider' => 'stripe',
-                        'description' => $obj['lines']['data'][0]['description'] ?? 'Piggybang Pro',
+                        'description' => $obj['lines']['data'][0]['description'] ?? 'PiggyBang! Pro',
                         'amount' => ($obj['amount_paid'] ?: $obj['amount_due']) / 100, 'currency' => strtoupper($obj['currency']),
                         'status' => $event['type'] === 'invoice.paid' ? 'paid' : 'failed', 'url' => $obj['hosted_invoice_url'] ?? null,
                         'paid_at' => $event['type'] === 'invoice.paid' ? now() : null,

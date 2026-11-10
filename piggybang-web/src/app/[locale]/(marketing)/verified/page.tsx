@@ -10,7 +10,7 @@ export default async function VerifiedPage({ params }: PageProps<"/[locale]/veri
   return (
     <main id="main" className="grid min-h-screen place-items-center px-4">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-        <Piggy state="celebrate" size={120} />
+        <Piggy state="bang" size={120} />
         <h1 className="text-2xl font-bold">{t("auth.verifiedTitle")}</h1>
         <p className="text-muted-foreground">{t("auth.verifiedBody")}</p>
         <Button asChild>

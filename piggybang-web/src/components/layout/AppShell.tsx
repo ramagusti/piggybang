@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Piggy } from "@/components/piggy/Piggy";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { InstallButton } from "@/components/shared/InstallButton";
 import { ErrorState } from "@/components/shared/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { useCurrentOrg } from "@/hooks/api";
@@ -13,6 +14,7 @@ import { getToken } from "@/lib/api";
 import type { Organization, Permission } from "@/types";
 import { MobileTabBar } from "./MobileTabBar";
 import { Navbar } from "./Navbar";
+import { LockedTeam } from "./LockedTeam";
 import { CreateOrgDialog } from "./OrgSwitcher";
 import { Sidebar } from "./Sidebar";
 
@@ -29,7 +31,7 @@ export function FullScreenLoader() {
   const t = useTranslations();
   return (
     <div className="grid min-h-screen place-items-center">
-      <Piggy state="idle" size={96} className="animate-piggy-walk" label={t("common.loading")} />
+      <Piggy state="fuse" size={96} className="animate-piggy-walk" label={t("common.loading")} />
     </div>
   );
 }
@@ -66,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!getToken()) router.replace("/login");
   }, [router]);
 
-  const needsOnboarding = !!org && !org.settings?.onboarded && !pathname.startsWith("/app/onboarding");
+  const needsOnboarding = !!org && !org.locked && !org.settings?.onboarded && !pathname.startsWith("/app/onboarding");
   useEffect(() => {
     if (needsOnboarding && org?.permissions.includes("rules.write")) router.replace("/app/onboarding");
   }, [needsOnboarding, org, router]);
@@ -84,6 +86,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
         <CreateOrgDialog open={creating} onOpenChange={setCreating} />
       </main>
+    );
+  }
+  if (org.locked) {
+    // Extra team without a paid plan: keep the navbar (team switcher, logout), block everything else.
+    return (
+      <OrgContext.Provider value={org}>
+        <Navbar />
+        <main id="main" className="grid min-h-[calc(100vh-4rem)] place-items-center px-4">
+          <LockedTeam org={org} />
+        </main>
+      </OrgContext.Provider>
     );
   }
   if (pathname.startsWith("/app/onboarding")) {
@@ -105,6 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <MobileTabBar />
+      <InstallButton />
     </OrgContext.Provider>
   );
 }

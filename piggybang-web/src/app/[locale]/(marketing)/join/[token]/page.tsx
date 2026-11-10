@@ -52,7 +52,7 @@ export default function JoinPage() {
       {failed ? (
         <ErrorState message={t("join.invalid")} />
       ) : !invite ? (
-        <Piggy state="idle" size={96} className="animate-piggy-walk" label={t("common.loading")} />
+        <Piggy state="fuse" size={96} className="animate-piggy-walk" label={t("common.loading")} />
       ) : (
         <div className="flex max-w-sm flex-col items-center gap-4 text-center">
           <Piggy state="wave" size={110} />

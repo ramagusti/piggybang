@@ -28,6 +28,13 @@ class OrganizationAccess
         if ($token && ! $request->user()->tokenCan('*') && (! $request->user()->tokenCan('org:'.$org->id) || ! $org->isPro())) {
             return response()->json(['message' => 'Token API tidak berlaku untuk organisasi ini.'], 403);
         }
+        // Unpaid extra team: only billing, viewing/switching and deleting it are allowed.
+        if ($org->isLocked()) {
+            $action = class_basename($request->route()->getControllerClass()).'@'.$request->route()->getActionMethod();
+            if (! str_starts_with($action, 'SubscriptionController@') && ! in_array($action, ['OrganizationController@show', 'OrganizationController@switch', 'OrganizationController@destroy'], true)) {
+                return response()->json(['message' => 'Tim tambahan butuh paket berbayar. Pilih paket di Penagihan.', 'code' => 'team_payment_required'], 402);
+            }
+        }
         if ($permission && ! $membership->can($permission)) {
             return response()->json(['message' => 'Peran kamu tidak punya akses untuk aksi ini.'], 403);
         }

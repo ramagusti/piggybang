@@ -71,7 +71,8 @@ return [
     'retention' => ['free_years_enabled' => (bool) env('FREE_RETENTION_ENABLED', false)],
 
     'supabase' => [
-        'url' => env('SUPABASE_URL'),
+        // Project URL only (https://<ref>.supabase.co); a pasted API path such as /rest/v1/ is dropped.
+        'url' => preg_replace('#^(https?://[^/]+).*$#', '$1', (string) env('SUPABASE_URL')) ?: null,
         'anon_key' => env('SUPABASE_ANON_KEY'),
         'jwt_secret' => env('SUPABASE_JWT_SECRET'),
     ],

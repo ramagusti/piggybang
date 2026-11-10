@@ -40,6 +40,7 @@ Query count dominates: from Indonesia every Supabase query costs about 55 to 70 
 - **WhatsApp:** handled directly in Laravel (webhook → queued job), so no Node bridge is needed. `/api/entries/ingest` stays (HMAC) for the existing bridge.
 - **Plans:** per team, all prices in `config/billing.php`.
   - Free: 2 members, no WhatsApp.
+  - One free team per user. Any further team a user creates is `paid_only`: locked (HTTP 402 `team_payment_required`, only billing/switch/delete work) until it has a paid plan, and again if the plan lapses. Joining other teams by invite is free.
   - Paid tiers (all features, 5 members, extra seat Rp 15k/month): Pro Rp 55k/month or Rp 500k/year with 50 bot text replies a month, Plus Rp 110k or Rp 1jt with 150, Max Rp 220k or Rp 2jt with 350 (yearly ≈ 24% cheaper; it's promoted). Each extra seat adds 10 replies.
   - Add-ons on any paid tier: extra seat Rp 15k (+10 replies), reply pack Rp 30k (+50 replies). Mid-period increases are charged pro rata (`BillingService::changeAddons`): under Rp 25k (`addon_invoice_min`) they apply at once and the charge joins the next renewal invoice; from Rp 25k, or when the team is cancelling, they're invoiced now. Cancelling bills any waiting charges at once. Reductions apply immediately, no refund.
   - ✅ reactions are unlimited on every tier.
