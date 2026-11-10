@@ -1,0 +1,60 @@
+<?php
+
+use App\Models\Bill;
+use App\Models\Organization;
+use App\Models\Transaction;
+use App\Models\WhatsAppConnection;
+use App\Notifications\BillDue;
+use App\Services\BillingService;
+use App\Services\BudgetService;
+use App\Services\SavingsService;
+use App\Services\WhatsAppService;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schedule;
+
+// Spec §8. Run `php artisan schedule:work` (dev) or cron `* * * * * php artisan schedule:run` (prod).
+
+Schedule::call(function () { // SendBillReminders: due in ≤3 days (or overdue), once per day per bill
+    Bill::where('is_active', true)->whereDate('due_date', '<=', now()->addDays(3))
+        ->where(fn ($q) => $q->whereNull('last_notified_at')->orWhere('last_notified_at', '<', now()->startOfDay()))
+        ->each(function (Bill $bill) {
+            $org = Organization::find($bill->organization_id);
+            $admins = $org->memberships()->whereIn('role', ['owner', 'admin'])->whereNotNull('user_id')->with('user')->get()->pluck('user');
+            Notification::send($admins, new BillDue($bill));
+            $d = $bill->daysUntilDue();
+            WhatsAppService::notifyOrganization($org, "📋 *Pengingat tagihan:* {$bill->name} ".WhatsAppService::rupiah($bill->amount).' — '.($d <= 0 ? 'jatuh tempo hari ini' : "$d hari lagi").($bill->destination_number ? "\nVia: {$bill->destination_account} {$bill->destination_number}" : ''));
+            $bill->update(['last_notified_at' => now()]);
+        });
+})->dailyAt('06:00')->timezone('Asia/Jakarta')->name('SendBillReminders')->withoutOverlapping();
+
+Schedule::call(fn () => Organization::query()->each(fn ($org) => SavingsService::recordForOrganization($org)))
+    ->dailyAt('07:00')->timezone('Asia/Jakarta')->name('RecalculateAllSavings')->withoutOverlapping();
+
+Schedule::call(function () { // WeeklyBudgetSummary (Mon 00:00)
+    Organization::whereNotNull('whatsapp_mode')->each(function (Organization $org) {
+        $s = SavingsService::current($org);
+        $lines = ['🐷 *Ringkasan minggu ini — '.$org->name.'*'];
+        foreach ($org->rules()->where('type', 'weekly_limit')->get() as $rule) {
+            $p = BudgetService::progress($org, $rule, now()->subDay()); // the week that just ended
+            $lines[] = ($p['percent'] > 100 ? '🔴' : '🟢')." {$rule->name}: ".WhatsAppService::rupiah($p['spent']).' / '.WhatsAppService::rupiah($p['effective_limit']);
+        }
+        $lines[] = ((float) $s['net_savings'] < 0 ? '🔴' : '🟢').' Tabungan siklus ini: '.WhatsAppService::rupiah($s['net_savings']);
+        WhatsAppService::notifyOrganization($org, implode("\n", $lines));
+    });
+})->weeklyOn(1, '00:00')->timezone('Asia/Jakarta')->name('WeeklyBudgetSummary')->withoutOverlapping();
+
+Schedule::call(function () { // CleanupSoftDeletes (+ optional Free-tier 2-year retention)
+    Transaction::onlyTrashed()->where('deleted_at', '<', now()->subDays(30))->forceDelete();
+    if (! config('services.retention.free_years_enabled')) {
+        return; // Hard-deleting history is opt-in only (FREE_RETENTION_ENABLED=true).
+    }
+    Organization::where('plan', 'free')->each(function (Organization $org) {
+        if (! $org->isPro()) {
+            $org->transactions()->withTrashed()->where('transaction_time', '<', now()->subYears(2))->forceDelete();
+        }
+    });
+})->dailyAt('02:00')->timezone('Asia/Jakarta')->name('CleanupSoftDeletes')->withoutOverlapping();
+
+Schedule::call(fn () => BillingService::runXenditLifecycle())->dailyAt('08:00')->timezone('Asia/Jakarta')->name('XenditLifecycle')->withoutOverlapping();
+Schedule::call(fn () => WhatsAppConnection::query()->update(['monthly_conversations' => 0])) // monthly paid-text cap
+    ->monthlyOn(1, '00:00')->timezone('Asia/Jakarta')->name('ResetWhatsAppTextCap');

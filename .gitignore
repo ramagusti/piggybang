@@ -1,0 +1,10 @@
+# Repo root = this folder, but only the Piggybang projects are tracked.
+# (Old money-manager apps, the AWS CLI etc. live alongside locally and stay out.)
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/API_CONTRACT.md
+!/docker-compose.yml
+!/piggybang-api/
+!/piggybang-web/

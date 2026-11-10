@@ -1,0 +1,35 @@
+# Local dev: Postgres + API + queue worker + scheduler + web.  `docker compose up --build`
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: piggybang }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  api: &api
+    build: ./piggybang-api
+    env_file: ./piggybang-api/.env
+    environment: &apienv
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: piggybang
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      FRONTEND_URL: http://localhost:3000
+    ports: ["8000:8000"]
+    depends_on: [db]
+  worker:
+    <<: *api
+    ports: []
+    command: php artisan queue:work --tries=3
+  scheduler:
+    <<: *api
+    ports: []
+    command: php artisan schedule:work
+  web:
+    build: ./piggybang-web
+    environment: { NEXT_PUBLIC_API_URL: http://localhost:8000/api }
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes:
+  pgdata:
