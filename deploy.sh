@@ -5,6 +5,22 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Preflight: everything this script rewrites must belong to the deploying user, and the web server must run as it
+# (the server writes caches into its build). Otherwise the deploy would stop halfway: new API, stale web.
+me=$(id -un)
+web_user=$(systemctl show -p User --value piggybang-web)
+if [ "$web_user" != "$me" ]; then
+  echo "piggybang-web runs as '${web_user:-root}', deploy runs as '$me'. Fix once: set User=$me in /etc/systemd/system/piggybang-web.service," >&2
+  echo "then: sudo systemctl daemon-reload && sudo chown -R $me:$me $PWD/piggybang-web/.next && sudo systemctl restart piggybang-web" >&2
+  exit 1
+fi
+foreign=$(find piggybang-web/.next .web-build piggybang-api/bootstrap/cache ! -user "$me" -print -quit 2>/dev/null || true)
+if [ -n "$foreign" ]; then
+  echo "Not owned by $me: $foreign (built or run as root?)" >&2
+  echo "Fix once: sudo chown -R $me:$me $PWD/piggybang-web/.next $PWD/.web-build $PWD/piggybang-api/bootstrap/cache" >&2
+  exit 1
+fi
+
 last=$(cat .deployed-rev 2>/dev/null || true)
 changed() { [ -z "$last" ] || ! git diff --quiet "$last" HEAD -- "$@" 2>/dev/null; }
 
@@ -30,8 +46,7 @@ if changed piggybang-web; then
   cp -r public .next/standalone/
   cp -r .next/static .next/standalone/.next/
   cd ..
-  # The running server (www-data) may write its own cache there; leave it alone so ownership can't block the swap.
-  rsync -a --delete --exclude /standalone/.next/cache/ .web-build/.next/ piggybang-web/.next/
+  rsync -a --delete .web-build/.next/ piggybang-web/.next/
   sudo -n systemctl restart piggybang-web
 fi
 
