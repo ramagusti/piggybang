@@ -21,21 +21,23 @@ export function Carousel({ children, className }: { children: React.ReactNode; c
     const auto = !matchMedia("(prefers-reduced-motion: reduce)").matches;
     const half = () => el.scrollWidth / 2;
     let pos = el.scrollLeft;
-    let pausedUntil = 0; // Infinity while held
+    // No enter/leave bookkeeping: a missed pointerleave would leave the strip paused for good. Ask the browser.
+    const canHover = matchMedia("(hover: hover)").matches; // touch screens keep :hover stuck after a tap
+    let resumeAt = 0;
+    let down = false;
     let last = performance.now();
     let drag: { x: number; left: number } | null = null;
     let raf = 0;
 
-    const hold = () => (pausedUntil = Infinity);
-    const release = () => (pausedUntil = performance.now() + RESUME_MS);
-    const nudge = () => pausedUntil !== Infinity && release(); // wheel / trackpad / momentum
+    const release = () => (resumeAt = performance.now() + RESUME_MS);
+    const paused = (now: number) => down || now < resumeAt || (canHover && el.matches(":hover"));
     const wrap = () => {
       // keep the user inside the loop: jump by one full set, which looks identical
       if (el.scrollLeft >= half()) el.scrollLeft -= half();
       else if (el.scrollLeft <= 0) el.scrollLeft += half();
     };
     const onDown = (e: PointerEvent) => {
-      hold();
+      down = true;
       if (e.pointerType === "mouse") drag = { x: e.clientX, left: el.scrollLeft };
     };
     const onMove = (e: PointerEvent) => {
@@ -45,13 +47,14 @@ export function Carousel({ children, className }: { children: React.ReactNode; c
       drag = { x: e.clientX, left: el.scrollLeft };
     };
     const onUp = () => {
+      if (down) release();
+      down = false;
       drag = null;
-      release();
     };
     const tick = (now: number) => {
       const dt = Math.min(100, now - last);
       last = now;
-      if (now > pausedUntil) {
+      if (!paused(now)) {
         pos = (pos + (SPEED * dt) / 1000) % half();
         el.scrollLeft = pos;
       } else {
@@ -62,10 +65,8 @@ export function Carousel({ children, className }: { children: React.ReactNode; c
     };
 
     el.addEventListener("pointerdown", onDown);
-    el.addEventListener("pointerenter", hold);
-    el.addEventListener("pointerleave", onUp);
-    el.addEventListener("wheel", nudge, { passive: true });
-    el.addEventListener("touchmove", nudge, { passive: true });
+    el.addEventListener("wheel", release, { passive: true }); // trackpad
+    el.addEventListener("touchmove", release, { passive: true }); // swipe + momentum
     addEventListener("pointermove", onMove);
     addEventListener("pointerup", onUp);
     addEventListener("pointercancel", onUp);
@@ -74,10 +75,8 @@ export function Carousel({ children, className }: { children: React.ReactNode; c
     return () => {
       cancelAnimationFrame(raf);
       el.removeEventListener("pointerdown", onDown);
-      el.removeEventListener("pointerenter", hold);
-      el.removeEventListener("pointerleave", onUp);
-      el.removeEventListener("wheel", nudge);
-      el.removeEventListener("touchmove", nudge);
+      el.removeEventListener("wheel", release);
+      el.removeEventListener("touchmove", release);
       el.removeEventListener("scroll", wrap);
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerup", onUp);
