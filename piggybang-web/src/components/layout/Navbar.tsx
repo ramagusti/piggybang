@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useMe } from "@/hooks/api";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api, clearToken } from "@/lib/api";
+import { disablePush } from "@/lib/push";
 import { useUIStore } from "@/stores/ui";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CreateOrgDialog, OrgSwitcher } from "./OrgSwitcher";
@@ -42,6 +43,7 @@ export function Navbar() {
   const [creating, setCreating] = useState(false);
 
   async function logout() {
+    await disablePush().catch(() => {}); // the next person on this device must not get this account's reminders
     await api("/auth/logout", { method: "POST" }).catch(() => {});
     clearToken();
     qc.clear();

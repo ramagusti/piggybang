@@ -70,6 +70,13 @@ return [
     // Spec: Free keeps 2 years of transactions. Off by default: enabling permanently deletes older rows nightly.
     'retention' => ['free_years_enabled' => (bool) env('FREE_RETENTION_ENABLED', false)],
 
+    // Web Push (browser / PWA notifications). Generate once with `php artisan push:keys`.
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', env('FRONTEND_URL', 'http://localhost:3000')),
+    ],
+
     'supabase' => [
         // Project URL only (https://<ref>.supabase.co); a pasted API path such as /rest/v1/ is dropped.
         'url' => preg_replace('#^(https?://[^/]+).*$#', '$1', (string) env('SUPABASE_URL')) ?: null,

@@ -508,7 +508,11 @@
     "deleteOrg": "Hapus organisasi",
     "deleteOrgHint": "Semua transaksi, kategori, dan anggota akan dihapus permanen.",
     "deleteOrgConfirm": "Ketik \"{name}\" untuk konfirmasi.",
-    "typeName": "Ketik nama organisasi"
+    "typeName": "Ketik nama organisasi",
+    "push": "Notifikasi di perangkat ini",
+    "pushHint": "Pengingat jam 19.00 kalau kamu belum mencatat apa pun hari itu, plus tagihan dan gajian mulai H-3.",
+    "pushUnsupported": "Belum didukung di browser ini. Di iPhone/iPad: pasang dulu aplikasinya ke layar utama (Bagikan → Tambah ke Layar Utama), lalu buka dari sana.",
+    "pushBlocked": "Izin notifikasi ditolak. Aktifkan lewat pengaturan browser untuk situs ini."
   },
   "billing": {
     "upgrade": "Upgrade",

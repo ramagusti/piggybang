@@ -10,6 +10,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\RuleController;
 use App\Http\Controllers\SavingsController;
 use App\Http\Controllers\SubscriptionController;
@@ -41,6 +42,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('auth/verify-email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:auth');
     Route::get('user', [AuthController::class, 'me']);
     Route::patch('user', [AuthController::class, 'updateMe']);
+    Route::get('push/key', [PushController::class, 'key']);
+    Route::post('push/subscriptions', [PushController::class, 'subscribe']);
+    Route::delete('push/subscriptions', [PushController::class, 'unsubscribe']);
 
     Route::get('organizations', [OrganizationController::class, 'index']);
     Route::post('organizations', [OrganizationController::class, 'store']);

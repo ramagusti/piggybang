@@ -30,6 +30,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Membership::class);
     }
 
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function membershipFor(Organization|int $org): ?Membership
     {
         $orgId = is_int($org) ? $org : $org->id;

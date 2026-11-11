@@ -508,7 +508,11 @@
     "deleteOrg": "Delete organization",
     "deleteOrgHint": "All transactions, categories and members are permanently deleted.",
     "deleteOrgConfirm": "Type \"{name}\" to confirm.",
-    "typeName": "Type the organization name"
+    "typeName": "Type the organization name",
+    "push": "Notifications on this device",
+    "pushHint": "A 7 pm reminder if you haven't recorded anything that day, plus bills and payday from 3 days before.",
+    "pushUnsupported": "Not supported in this browser. On iPhone/iPad: add the app to your home screen first (Share → Add to Home Screen), then open it from there.",
+    "pushBlocked": "Notification permission was denied. Allow it in your browser's settings for this site."
   },
   "billing": {
     "upgrade": "Upgrade",

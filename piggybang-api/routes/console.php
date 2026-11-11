@@ -3,14 +3,18 @@
 use App\Models\Bill;
 use App\Models\Organization;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\WhatsAppConnection;
 use App\Notifications\BillDue;
 use App\Services\BillingService;
 use App\Services\BudgetService;
+use App\Services\PushService;
 use App\Services\SavingsService;
 use App\Services\WhatsAppService;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schedule;
+use Minishlink\WebPush\VAPID;
 
 // Spec §8. Run `php artisan schedule:work` (dev) or cron `* * * * * php artisan schedule:run` (prod).
 
@@ -58,3 +62,18 @@ Schedule::call(function () { // CleanupSoftDeletes (+ optional Free-tier 2-year 
 Schedule::call(fn () => BillingService::runXenditLifecycle())->dailyAt('08:00')->timezone('Asia/Jakarta')->name('XenditLifecycle')->withoutOverlapping();
 Schedule::call(fn () => WhatsAppConnection::query()->update(['monthly_conversations' => 0])) // monthly paid-text cap
     ->monthlyOn(1, '00:00')->timezone('Asia/Jakarta')->name('ResetWhatsAppTextCap');
+
+// Push notifications to phones/browsers that enabled them (Settings → Profile).
+Schedule::call(fn () => PushService::sendReminders())->dailyAt('08:00')->timezone('Asia/Jakarta')->name('PushReminders')->withoutOverlapping();
+Schedule::call(fn () => PushService::nudgeIdleUsers())->dailyAt('19:00')->timezone('Asia/Jakarta')->name('PushDailyNudge')->withoutOverlapping();
+
+Artisan::command('push:keys', function () {
+    $k = VAPID::createVapidKeys();
+    $this->line("VAPID_PUBLIC_KEY={$k['publicKey']}\nVAPID_PRIVATE_KEY={$k['privateKey']}\nVAPID_SUBJECT=mailto:you@example.com");
+})->purpose('Print new Web Push keys for .env (run once; changing them invalidates every subscription)');
+
+Artisan::command('push:test {email}', function (string $email) {
+    $user = User::where('email', $email)->firstOrFail();
+    PushService::send([$user->id], ['title' => 'PiggyBang! 🐷', 'body' => 'Notifikasi aktif.', 'url' => '/app/dashboard', 'tag' => 'test']);
+    $this->info('Sent to '.$user->pushSubscriptions()->count().' device(s).');
+})->purpose('Send a test push notification to one user');

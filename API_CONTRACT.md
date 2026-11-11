@@ -74,6 +74,9 @@ Roles → permissions:
 | POST | /auth/verify-email/resend | | `{message}` |
 | GET | /user | | `{user, organizations: Organization[]}` |
 | PATCH | /user | name?, locale?, timezone?, avatar_url? | `{user}` |
+| GET | /push/key | | `{key}` VAPID public key (null if push is not configured) |
+| POST | /push/subscriptions | `PushSubscription.toJSON()`: endpoint, keys.p256dh, keys.auth | 204. Registers this device for Web Push (19:00 "nothing recorded today" nudge; 08:00 bills due ≤3 days and payday from D-3). Endpoint must be a browser push service |
+| DELETE | /push/subscriptions | endpoint | 204 |
 
 ## Organizations
 | Method | Path | Notes |
