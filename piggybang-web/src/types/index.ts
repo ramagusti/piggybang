@@ -86,6 +86,7 @@ export interface Rule {
   category_name: string | null;
   rollover_enabled: boolean;
   notify: boolean;
+  ai_assign: boolean;
   progress?: {
     period_start: string;
     period_end: string;

@@ -12,7 +12,7 @@ class UserRule extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['limit_amount' => 'decimal:2', 'is_primary_payday' => 'boolean', 'rollover_enabled' => 'boolean', 'notify' => 'boolean'];
+    protected $casts = ['limit_amount' => 'decimal:2', 'is_primary_payday' => 'boolean', 'rollover_enabled' => 'boolean', 'notify' => 'boolean', 'ai_assign' => 'boolean'];
 
     public function category(): BelongsTo
     {

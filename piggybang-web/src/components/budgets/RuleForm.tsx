@@ -36,6 +36,7 @@ export function RuleForm({
   const [amount, setAmount] = useState<number | null>(rule ? Number(rule.limit_amount) : null);
   const [rollover, setRollover] = useState(rule?.rollover_enabled ?? true);
   const [notify, setNotify] = useState(rule?.notify ?? true);
+  const [aiAssign, setAiAssign] = useState(rule?.ai_assign ?? true);
   const [day, setDay] = useState(rule?.date_condition ?? "");
   const [keywords, setKeywords] = useState(rule?.category_name ?? "");
   const [primary, setPrimary] = useState(rule?.is_primary_payday ?? true);
@@ -53,6 +54,7 @@ export function RuleForm({
         period: type === "weekly_limit" ? "weekly" : type === "monthly_limit" ? "monthly" : null,
         rollover_enabled: type === "weekly_limit" ? rollover : false,
         notify: payday ? false : notify,
+        ai_assign: payday ? false : aiAssign,
         date_condition: payday ? day : null,
         category_name: keywords.trim() || null,
         is_primary_payday: payday ? primary : false,
@@ -87,16 +89,25 @@ export function RuleForm({
           <Label htmlFor="rule-name">{t("budgets.ruleName")}</Label>
           <Input id="rule-name" required value={name} onChange={(e) => setName(e.target.value)} />
         </div>
+        {!payday && (
+          <div className="space-y-1">
+            <div className="flex min-h-11 items-center justify-between gap-3">
+              <Label htmlFor="rule-ai">{t("budgets.aiAssignLabel")}</Label>
+              <Switch id="rule-ai" checked={aiAssign} onCheckedChange={setAiAssign} />
+            </div>
+            <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiAssignOnHint" : "budgets.aiAssignOffHint")}</p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="rule-cat">{t("tx.category")}</Label>
           <CategoryPicker id="rule-cat" categories={categories} value={categoryId} onChange={setCategoryId} />
-          {!payday && <p className="text-xs text-muted-foreground">{t("budgets.categoryHint")}</p>}
+          {!payday && <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiCategoryHint" : "budgets.categoryHint")}</p>}
         </div>
         {!payday && (
           <div className="space-y-1.5">
             <Label htmlFor="rule-limit-kw">{t("budgets.limitKeywords")}</Label>
-            <Input id="rule-limit-kw" placeholder="bensin, pertalite" value={keywords} onChange={(e) => setKeywords(e.target.value)} disabled={!!categoryId} />
-            <p className="text-xs text-muted-foreground">{t("budgets.limitKeywordsHint")}</p>
+            <Input id="rule-limit-kw" placeholder="bensin, pertalite, -angin" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
+            <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiKeywordsHint" : "budgets.limitKeywordsHint")}</p>
           </div>
         )}
         <div className="space-y-1.5">

@@ -298,7 +298,9 @@
     "deleteFailed": "Gagal menghapus",
     "emptyTitle": "Catat transaksi pertama kamu!",
     "emptyBody": "Atau ubah filter untuk melihat lebih banyak.",
-    "swipeHint": "Geser ke kiri untuk menghapus"
+    "swipeHint": "Geser ke kiri untuk menghapus",
+    "deleteTitle": "Hapus transaksi?",
+    "deleteConfirm": "\"{name}\" akan dihapus."
   },
   "category": {
     "pickPlaceholder": "Cari atau pilih...",
@@ -362,9 +364,12 @@
         "Belum punya aturan gajian? Siklusnya pakai bulan kalender (tanggal 1 sampai akhir bulan)."
       ],
       "match": [
-        "Pilih kategori: semua pengeluaran di kategori itu dihitung.",
-        "Tanpa kategori: dihitung pengeluaran yang deskripsinya mengandung salah satu kata kunci. Pisahkan dengan koma, misalnya \"bensin, pertalite\".",
+        "Hanya kategori: semua pengeluaran di kategori itu dihitung.",
+        "Hanya kata kunci: dihitung pengeluaran yang deskripsinya mengandung salah satu kata kunci. Pisahkan dengan koma, misalnya \"bensin, pertalite\".",
+        "Kategori dan kata kunci: hanya pengeluaran di kategori itu yang deskripsinya mengandung kata kunci.",
+        "Kecualikan dengan tanda minus: \"bensin, -angin\" melewatkan deskripsi yang mengandung \"angin\". Pengecualian juga berlaku saat Piggy AI yang memilih.",
         "Tanpa kategori dan kata kunci: semua pengeluaran dihitung.",
+        "\"Biar Piggy AI yang memilih\" menyala: Piggy memilih satu anggaran yang paling cocok untuk tiap pengeluaran, jadi \"Makan harian\" dan \"Makan besar keluarga\" bisa satu kategori. Kategori dan kata kunci, kalau diisi, membatasi apa yang boleh Piggy masukkan.",
         "Piggy mengingatkan saat jatah terpakai 80% dan saat sudah lewat, di dasbor dan di WhatsApp.",
         "\"Kabari sisa jatah lewat WhatsApp\" menyala: setiap transaksi yang masuk anggaran ini dibalas sisa jatahnya. Mati: cukup ditandai ✅."
       ],
@@ -376,8 +381,14 @@
       ]
     },
     "limitKeywords": "Kata kunci (opsional)",
-    "limitKeywordsHint": "Dipakai kalau kategori kosong. Pisahkan dengan koma.",
-    "categoryHint": "Kosongkan kalau mau pakai kata kunci.",
+    "limitKeywordsHint": "Pisahkan dengan koma. Beri tanda - di depan untuk mengecualikan: \"bensin, -angin\". Kalau ada kategori, hanya pengeluaran di kategori itu yang cocok yang dihitung.",
+    "categoryHint": "Opsional. Kosongkan kalau cukup pakai kata kunci.",
+    "aiAssignLabel": "Biar Piggy AI yang memilih",
+    "aiAssignOnHint": "Piggy membaca tiap pengeluaran dan memilih satu anggaran yang paling cocok, terutama dari nama anggarannya. Beri nama yang jelas, misalnya \"Makan besar keluarga\".",
+    "aiAssignOffHint": "Mati: semua pengeluaran yang cocok dengan kategori dan kata kunci di bawah dihitung.",
+    "aiCategoryHint": "Opsional. Piggy hanya memilih anggaran ini untuk pengeluaran di kategori ini.",
+    "aiKeywordsHint": "Opsional. Piggy hanya memilih anggaran ini kalau deskripsinya mengandung salah satu kata ini, dan tidak pernah kalau ada kata ber-tanda -. Pisahkan dengan koma, misalnya \"bensin, -angin\".",
+    "aiAssigned": "Dipilih Piggy AI",
     "paydayKeywordsHint": "Untuk mengenali gaji yang masuk lebih awal. Pisahkan dengan koma.",
     "limitHintWeekly": "Jatah per minggu.",
     "limitHintMonthly": "Jatah per siklus gajian.",

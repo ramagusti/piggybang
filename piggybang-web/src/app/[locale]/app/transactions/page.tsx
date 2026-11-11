@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useOrg } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorState } from "@/components/shared/ErrorBoundary";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { ImportDialog } from "@/components/transactions/ImportDialog";
@@ -32,6 +33,7 @@ export default function TransactionsPage() {
   const [editing, setEditing] = useState<Transaction | undefined>();
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [confirming, setConfirming] = useState<Transaction | undefined>();
   const { data, isLoading, error, refetch } = useTransactions(org.id, filters);
   const { data: categories = [] } = useCategories(org.id);
   const canWrite = can("transactions.write");
@@ -136,7 +138,7 @@ export default function TransactionsPage() {
                 setEditing(tx);
                 setFormOpen(true);
               }}
-              onDelete={remove}
+              onDelete={setConfirming}
             />
           </div>
           <ul className="space-y-2 md:hidden">
@@ -149,7 +151,7 @@ export default function TransactionsPage() {
                   setEditing(tx);
                   setFormOpen(true);
                 }}
-                onDelete={() => remove(tx)}
+                onDelete={() => setConfirming(tx)}
               />
             ))}
           </ul>
@@ -168,8 +170,19 @@ export default function TransactionsPage() {
         </nav>
       )}
 
-      <TransactionDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} onDelete={canWrite ? remove : undefined} />
+      <TransactionDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} onDelete={canWrite ? setConfirming : undefined} />
       <ImportDialog orgId={org.id} open={importOpen} onOpenChange={setImportOpen} />
+      <ConfirmDialog
+        open={!!confirming}
+        onOpenChange={(o) => !o && setConfirming(undefined)}
+        title={t("tx.deleteTitle")}
+        description={t("tx.deleteConfirm", { name: confirming?.description || confirming?.category?.name || "-" })}
+        confirmLabel={t("common.delete")}
+        onConfirm={() => {
+          if (confirming) remove(confirming);
+          setConfirming(undefined);
+        }}
+      />
     </>
   );
 }

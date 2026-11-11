@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\WhatsAppConnection;
 use App\Models\WhatsAppSender;
 use App\Services\AiClient;
+use App\Services\BudgetService;
 use App\Services\EntryIngestionService;
 use App\Services\OcrService;
 use App\Services\PaydayService;
@@ -164,6 +165,9 @@ class ProcessWhatsAppMessage implements ShouldQueue
         $cats = $org->categories()->orderBy('type')->orderBy('sort_order')->get(['id', 'type', 'name'])
             ->map(fn ($c) => "{$c->id}|{$c->type}|{$c->name}")->implode("\n");
         $members = $org->memberships()->whereNotNull('user_id')->with('user')->get()->pluck('user.name')->implode(', ');
+        $aiBudgets = BudgetService::aiBudgets($org);
+        $budgets = $aiBudgets->isEmpty() ? '' : "\n".BudgetService::aiPrompt($aiBudgets);
+        $budgetField = $aiBudgets->isEmpty() ? '' : ',"budget_id":number|null';
         $now = now($org->timezone());
         [$cycleStart, $cycleEnd] = PaydayService::cycle($org);
         $actor = $user?->name ?? $senderName ?? 'Unknown';
@@ -184,13 +188,13 @@ Now: {$now->toIso8601String()} ({$now->locale('id')->dayName}, timezone {$org->t
 Sender: {$actor}. Team members: {$members}.
 Date ranges (copy exactly into from/to): {$ranges}.
 VALID_CATEGORIES (id|type|name):
-{$cats}
+{$cats}{$budgets}
 
 intent "record": the message reports money spent or received. Fill entries.
 - "25k"/"25rb" = 25000, "1,5jt"/"1.5jt" = 1500000. Expense unless clearly income (gaji, gajian, salary, transfer masuk, bonus).
 - Pick the closest category from VALID_CATEGORIES (id and name). Fuel/parking/ojek/toll → transport-like category; electricity/phone credit/internet/subscriptions → bills-like category.
 - One entry per item ("bensin 100k sama parkir 5rb" = 2 entries). Relative dates ("kemarin") against Now.
-intent "ask": the message asks about their data (berapa, sisa, cek, lihat, tampilkan, rekap, "?"). Fill ask:
+- description: the sender's own words for that item, copied exactly, minus the amount and date words ("kemarin bensin mobil 100k" → "bensin mobil"). Never translate, rephrase, or replace it with the category name.intent "ask": the message asks about their data (berapa, sisa, cek, lihat, tampilkan, rekap, "?"). Fill ask:
 - topic: transactions (spending/income/history/totals) | budgets (anggaran, jatah, limit, sisa) | bills (tagihan) | savings (tabungan) | categories | billing (paket, langganan, kuota, bayar) | members (anggota) | help (bisa apa, cara pakai).
 - scope: "me" when about the sender (aku, saya, -ku, punyaku), else "team".
 - type: expense | income | all. category/keyword/member: only if mentioned (member must be one of Team members).
@@ -199,7 +203,7 @@ intent "ask": the message asks about their data (berapa, sisa, cek, lihat, tampi
 intent "other": greetings or anything else: no entries, ask a short friendly Indonesian question about what to record or check.
 If a record is ambiguous (no amount), use needs_clarification with a short Indonesian question.
 
-JSON: {"intent":"record|ask|other","entries":[{"type":"income|expense","category":{"id":number,"name":string},"description":string,"value":{"amount":number,"currency":"IDR"},"actor":{"name":string},"datetime":ISO8601,"source":"whatsapp","confidence":0..1}],"ask":{"topic":string,"scope":"me|team","type":"expense|income|all","category":string|null,"keyword":string|null,"member":string|null,"from":string|null,"to":string|null}|null,"needs_clarification":bool,"clarification_question":string|null}
+JSON: {"intent":"record|ask|other","entries":[{"type":"income|expense","category":{"id":number,"name":string},"description":string,"value":{"amount":number,"currency":"IDR"},"actor":{"name":string},"datetime":ISO8601,"source":"whatsapp","confidence":0..1{$budgetField}}],"ask":{"topic":string,"scope":"me|team","type":"expense|income|all","category":string|null,"keyword":string|null,"member":string|null,"from":string|null,"to":string|null}|null,"needs_clarification":bool,"clarification_question":string|null}
 PROMPT],
             ['role' => 'user', 'content' => $text],
         ];

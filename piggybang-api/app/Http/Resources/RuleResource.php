@@ -17,7 +17,7 @@ class RuleResource extends JsonResource
             'category' => $this->category ? $this->category->only(['id', 'name', 'icon', 'color']) : null,
             'limit_amount' => $this->limit_amount, 'period' => $this->period, 'is_primary_payday' => $this->is_primary_payday,
             'date_condition' => $this->date_condition, 'category_name' => $this->category_name, 'rollover_enabled' => $this->rollover_enabled,
-            'notify' => (bool) ($this->notify ?? true),
+            'notify' => (bool) ($this->notify ?? true), 'ai_assign' => (bool) $this->ai_assign,
         ];
         if ($this->type === 'payday') {
             [$s, $e] = PaydayService::cycle($org);

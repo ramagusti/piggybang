@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TransactionResource;
+use App\Jobs\AssignBudget;
 use App\Models\Organization;
 use App\Models\Transaction;
 use App\Services\OrganizationService;
@@ -49,6 +50,7 @@ class TransactionController extends Controller
     {
         $data = $this->validated($request, $org);
         $tx = TransactionService::create($org, $data, $request->user(), $request->user()->currentAccessToken()?->name === 'web' ? 'web' : 'api');
+        AssignBudget::dispatch($tx->id);
 
         return response()->json(['transaction' => new TransactionResource($tx), 'metadata' => TransactionService::afterWrite($org)], 201);
     }
@@ -76,6 +78,7 @@ class TransactionController extends Controller
             'category_id' => $p['category_id'], 'amount' => $p['amount'], 'actor' => ($p['actor'] ?? null) ?: ($base['actor'] ?? null),
             'metadata' => ['split' => ['group' => $group, 'part' => $i + 1, 'of' => $parts->count(), 'total' => (float) $base['amount']]],
         ] + $base, $request->user(), $source)));
+        $txs->each(fn ($tx) => AssignBudget::dispatch($tx->id));
 
         return response()->json(['transactions' => TransactionResource::collection($txs), 'metadata' => TransactionService::afterWrite($org)], 201);
     }
@@ -88,6 +91,9 @@ class TransactionController extends Controller
     public function update(Request $request, Organization $org, Transaction $transaction)
     {
         $transaction->update($this->validated($request, $org, true));
+        if ($transaction->wasChanged(['category_id', 'description', 'type'])) {
+            AssignBudget::dispatch($transaction->id); // re-pick: also how a wrong AI pick gets corrected
+        }
         TransactionService::fireWebhook($org, 'transaction.updated', $transaction);
 
         return ['transaction' => new TransactionResource($transaction->load('category', 'user')), 'metadata' => TransactionService::afterWrite($org)];

@@ -298,7 +298,9 @@
     "deleteFailed": "Failed to delete",
     "emptyTitle": "Record your first transaction!",
     "emptyBody": "Or change filters to see more.",
-    "swipeHint": "Swipe left to delete"
+    "swipeHint": "Swipe left to delete",
+    "deleteTitle": "Delete transaction?",
+    "deleteConfirm": "\"{name}\" will be deleted."
   },
   "category": {
     "pickPlaceholder": "Search or pick...",
@@ -362,9 +364,12 @@
         "No payday rule yet? The cycle uses the calendar month (1st to month end)."
       ],
       "match": [
-        "Pick a category: every expense in that category counts.",
-        "No category: expenses whose description contains any keyword count. Separate keywords with commas, e.g. \"fuel, petrol\".",
+        "Category only: every expense in that category counts.",
+        "Keywords only: expenses whose description contains any keyword count. Separate keywords with commas, e.g. \"fuel, petrol\".",
+        "Category and keywords: only expenses in that category whose description contains a keyword count.",
+        "Exclude with a minus: \"fuel, -tire\" skips any description containing \"tire\". Exclusions also apply when Piggy AI decides.",
         "No category and no keywords: all expenses count.",
+        "\"Let Piggy AI decide\" on: Piggy picks the one budget each expense belongs to, so \"Daily meals\" and \"Family dinners\" can share a category. The category and keywords, if set, limit what Piggy may put in it.",
         "Piggy warns you at 80% used and once you go over, on the dashboard and on WhatsApp.",
         "\"Tell me what is left on WhatsApp\" on: every transaction in this budget gets a reply with what is left. Off: just a ✅."
       ],
@@ -376,8 +381,14 @@
       ]
     },
     "limitKeywords": "Keywords (optional)",
-    "limitKeywordsHint": "Used when no category is set. Separate with commas.",
-    "categoryHint": "Leave empty to use keywords instead.",
+    "limitKeywordsHint": "Separate with commas. Put - in front to exclude: \"fuel, -tire\". With a category, only expenses in that category that match count.",
+    "categoryHint": "Optional. Leave empty to match by keywords only.",
+    "aiAssignLabel": "Let Piggy AI decide",
+    "aiAssignOnHint": "Piggy reads each expense and picks the one budget it belongs to, mostly by budget name. Give it a clear name, e.g. \"Family dinners\".",
+    "aiAssignOffHint": "Off: every expense matching the category and keywords below counts.",
+    "aiCategoryHint": "Optional. Piggy only picks this budget for expenses in this category.",
+    "aiKeywordsHint": "Optional. Piggy only picks this budget when the description has one of these words, and never with a -word. Separate with commas, e.g. \"fuel, -tire\".",
+    "aiAssigned": "Piggy AI decides",
     "paydayKeywordsHint": "Helps spot salary that arrives early. Separate with commas.",
     "limitHintWeekly": "Allowance per week.",
     "limitHintMonthly": "Allowance per payday cycle.",

@@ -144,7 +144,7 @@ class WhatsAppService
         }
 
         return $org->rules()->whereIn('type', ['weekly_limit', 'monthly_limit'])->where('notify', true)->orderBy('id')->get()
-            ->filter(fn ($rule) => $expenses->contains(fn ($tx) => BudgetService::matches($rule, $tx->category_id, $tx->description)))
+            ->filter(fn ($rule) => $expenses->contains(fn ($tx) => BudgetService::matches($rule, $tx->category_id, $tx->description, BudgetService::budgetOf($tx->metadata))))
             ->map(function ($rule) use ($org) {
                 $p = BudgetService::progress($org, $rule);
                 $icon = $p['percent'] > 100 ? '🔴' : ($p['percent'] >= 80 ? '🟠' : '🟢');

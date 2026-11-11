@@ -69,34 +69,83 @@ class BudgetService
         [$f, $t] = [$from->timestamp, $to->timestamp];
 
         return self::cycleExpenses($org, $cycleStart, $cycleEnd)
-            ->filter(fn ($e) => $e['at'] >= $f && $e['at'] <= $t && self::matches($rule, $e['category_id'], $e['description']))
+            // A budget created after the expense was recorded wasn't on the AI's list, so its pick doesn't apply to it.
+            ->filter(fn ($e) => $e['at'] >= $f && $e['at'] <= $t
+                && self::matches($rule, $e['category_id'], $e['description'], $rule->created_at?->timestamp > $e['recorded'] ? null : $e['budget']))
             ->sum('amount');
     }
 
     /**
-     * Does an expense count toward $rule? Category set → same category. Otherwise comma-separated keywords
-     * in the description, any match ("bensin, pertalite"). Neither → every expense.
+     * Does an expense count toward $rule? The category (if set) and the comma-separated keywords must match: any
+     * keyword in the description, none of the "-excluded" ones ("bensin, pertalite, -angin"). Nothing set → every expense.
+     * AI budgets (ai_assign) additionally need the AI's pick for the expense ($budget: rule id, 0 = none). Without a pick
+     * (budget created after the expense, AI unavailable) they fall back to category/keywords, and count nothing without either.
      */
-    public static function matches(UserRule $rule, ?int $categoryId, ?string $description): bool
+    public static function matches(UserRule $rule, ?int $categoryId, ?string $description, ?int $budget = null): bool
     {
-        if ($rule->category_id) {
-            return $categoryId == $rule->category_id;
-        }
-        $keywords = array_filter(array_map(fn ($k) => trim(mb_strtolower($k)), explode(',', (string) $rule->category_name)));
+        [$include, $exclude] = self::keywords($rule);
         $description = mb_strtolower((string) $description);
+        $has = fn (array $words) => (bool) array_filter($words, fn ($k) => str_contains($description, $k));
+        $passes = (! $rule->category_id || $categoryId == $rule->category_id) && (! $include || $has($include)) && ! $has($exclude);
+        if (! $rule->ai_assign) {
+            return $passes;
+        }
 
-        return ! $keywords || (bool) array_filter($keywords, fn ($k) => str_contains($description, $k));
+        return $passes && ($budget !== null ? $budget === $rule->id : ($rule->category_id || $include));
+    }
+
+    /** @return array{0: list<string>, 1: list<string>} [keywords, excluded keywords] */
+    private static function keywords(UserRule $rule): array
+    {
+        $words = array_filter(array_map(fn ($k) => trim(mb_strtolower($k)), explode(',', (string) $rule->category_name)));
+        $excluded = array_filter($words, fn ($k) => str_starts_with($k, '-'));
+
+        return [
+            array_values(array_diff($words, $excluded)),
+            array_values(array_filter(array_map(fn ($k) => trim(substr($k, 1)), $excluded))),
+        ];
+    }
+
+    /** Budgets the AI files expenses into. */
+    public static function aiBudgets(Organization $org)
+    {
+        return $org->rules()->whereIn('type', ['weekly_limit', 'monthly_limit'])->where('ai_assign', true)->with('category')->orderBy('id')->get();
+    }
+
+    /** Prompt section asking for `budget_id`; shared by WhatsApp extraction and AssignBudget. */
+    public static function aiPrompt($rules): string
+    {
+        $lines = $rules->map(function ($r) {
+            [$include, $exclude] = self::keywords($r);
+
+            return "{$r->id}|".($r->type === 'weekly_limit' ? 'weekly' : 'monthly')."|{$r->name}|".($r->category?->name ?? 'any')
+                .'|'.(implode(', ', $include) ?: 'any').'|'.(implode(', ', $exclude) ?: '-');
+        })->implode("\n");
+
+        return <<<PROMPT
+BUDGETS (id|period|name|only category|only if description contains one of|never if description contains one of):
+{$lines}
+budget_id (expenses only): the ONE budget from BUDGETS this expense belongs to, judged by what it is and the occasion; the name says the budget's purpose. A budget only takes expenses that fit its category and words, when those are set. E.g. with "Makan harian" and "Makan besar keluarga": "makan siang 25rb" → Makan harian, "makan malam sama keluarga di resto 450rb" → Makan besar keluarga. null when none fits.
+PROMPT;
+    }
+
+    /** The AI's budget pick stored on a transaction: rule id, 0 = none, null = not picked (match by category/keywords). */
+    public static function budgetOf(?array $metadata): ?int
+    {
+        return isset($metadata['budget']) ? (int) $metadata['budget'] : null;
     }
 
     private static function cycleExpenses(Organization $org, CarbonImmutable $start, CarbonImmutable $end)
     {
         return Memo::get("cycle-expenses:{$org->id}:{$start->timestamp}:{$end->timestamp}", fn () => $org->transactions()
             ->where('type', 'expense')->whereBetween('transaction_time', [$start->utc(), $end->utc()])
-            ->toBase()->get(['transaction_time', 'category_id', 'description', 'amount', 'currency'])
+            ->toBase()->get(['transaction_time', 'category_id', 'description', 'amount', 'currency', 'metadata', 'created_at'])
             ->map(fn ($r) => [
                 'at' => CarbonImmutable::parse($r->transaction_time, 'UTC')->timestamp,
+                'recorded' => CarbonImmutable::parse($r->created_at, 'UTC')->timestamp,
                 'category_id' => $r->category_id,
                 'description' => mb_strtolower((string) $r->description),
+                'budget' => self::budgetOf(json_decode((string) $r->metadata, true) ?: []),
                 'amount' => (float) $r->amount * ExchangeRate::rate($r->currency, $org->currency()),
             ]));
     }

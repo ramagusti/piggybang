@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Services\BudgetService;
+use App\Services\EntryIngestionService;
 use App\Services\PaydayService;
 use App\Services\SavingsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -57,6 +59,74 @@ class PaydayBudgetTest extends TestCase
         $this->assertSame('0.00', $spent());
         $rule->update(['category_name' => 'tidak ada, MAKAN ']); // comma list, case/space-insensitive
         $this->assertSame('25000.00', $spent());
+    }
+
+    public function test_ai_budgets_follow_the_pick_inside_their_category_and_keywords(): void
+    {
+        [$owner, $org] = $this->makeOrg();
+        $food = $this->cat($org, 'Food & Beverages');
+        $rule = fn ($name, array $attrs) => $org->rules()->create($attrs + ['name' => $name, 'type' => 'monthly_limit', 'limit_amount' => 9000000]);
+        $daily = $rule('Makan harian', ['type' => 'weekly_limit', 'ai_assign' => true, 'category_id' => $food->id]);
+        $family = $rule('Makan besar keluarga', ['ai_assign' => true, 'category_id' => $food->id]);
+        $anyAi = $rule('Jajan', ['ai_assign' => true]);                      // AI, no filter
+        $foodRule = $rule('Semua makan', ['category_id' => $food->id]);      // rules only: AI pick ignored
+        $total = $rule('Total', []);
+        $entry = fn ($desc, $amount, $budget) => ['type' => 'expense', 'category' => ['id' => $food->id], 'description' => $desc,
+            'value' => ['amount' => $amount], 'datetime' => now()->toIso8601String(), 'budget_id' => $budget];
+        EntryIngestionService::ingest($org, [
+            $entry('makan siang', 25000, $daily->id),
+            $entry('makan malam keluarga', 450000, $family->id),
+            $entry('kopi', 10000, $anyAi->id),
+            $entry('roti', 1000, 999999), // unknown id → no pick: AI budgets fall back to their category
+            $entry('es teh', 5000, $foodRule->id), // not an AI budget → no pick either
+        ], $owner);
+        $spent = fn ($r) => BudgetService::progress($org, $r)['spent'];
+
+        $this->assertSame('31000.00', $spent($daily));
+        $this->assertSame('456000.00', $spent($family));
+        $this->assertSame('10000.00', $spent($anyAi)); // fallback without a filter counts nothing
+        $this->assertSame('491000.00', $spent($foodRule));
+        $this->assertSame('491000.00', $spent($total));
+
+        // Created after those were recorded → the AI never saw it, so category AND keyword decide.
+        $this->travel(1)->minutes();
+        $coffee = $rule('Ngopi', ['ai_assign' => true, 'category_id' => $food->id, 'category_name' => 'kopi, teh']);
+        $this->assertSame('15000.00', $spent($coffee));
+    }
+
+    public function test_excluded_keywords(): void
+    {
+        [$owner, $org] = $this->makeOrg();
+        $transport = $this->cat($org, 'Transportation');
+        $rule = fn ($words, array $attrs = []) => $org->rules()->create($attrs + ['name' => $words, 'type' => 'monthly_limit', 'limit_amount' => 1000000, 'category_name' => $words]);
+        $fuel = $rule('Bensin, -ANGIN ');
+        $notAir = $rule('-angin');
+        $ai = $rule('-angin', ['ai_assign' => true, 'category_id' => $transport->id]);
+        EntryIngestionService::ingest($org, collect([['bensin mobil', 100000], ['bensin + isi angin', 5000], ['isi angin', 10000]])
+            ->map(fn ($e) => ['type' => 'expense', 'category' => ['id' => $transport->id], 'description' => $e[0], 'value' => ['amount' => $e[1]],
+                'datetime' => now()->toIso8601String(), 'budget_id' => $ai->id])->all(), $owner);
+        $spent = fn ($r) => BudgetService::progress($org, $r)['spent'];
+
+        $this->assertSame('100000.00', $spent($fuel));
+        $this->assertSame('100000.00', $spent($notAir)); // only exclusions: everything else counts
+        $this->assertSame('100000.00', $spent($ai));     // the AI's pick can't override an exclusion
+    }
+
+    public function test_expense_added_in_app_gets_an_ai_budget_pick(): void
+    {
+        config(['services.ai.key' => 'k', 'services.ai.base_url' => 'https://ai.test/v1']);
+        [$owner, $org] = $this->makeOrg();
+        $food = $this->cat($org, 'Food & Beverages');
+        $daily = $org->rules()->create(['name' => 'Makan harian', 'type' => 'weekly_limit', 'limit_amount' => 500000, 'category_id' => $food->id, 'ai_assign' => true]);
+        $family = $org->rules()->create(['name' => 'Makan besar keluarga', 'type' => 'monthly_limit', 'limit_amount' => 2000000, 'category_id' => $food->id, 'ai_assign' => true]);
+        Http::fake(['ai.test/*' => Http::response(['choices' => [['message' => ['content' => json_encode(['budget_id' => $family->id])]]]])]);
+        Sanctum::actingAs($owner, ['*']);
+
+        $this->postJson("/api/organizations/{$org->id}/transactions", ['type' => 'expense', 'category_id' => $food->id, 'amount' => 450000,
+            'description' => 'makan malam keluarga', 'transaction_time' => now()->toIso8601String()])->assertCreated();
+
+        $this->assertSame('0.00', BudgetService::progress($org, $daily)['spent']);
+        $this->assertSame('450000.00', BudgetService::progress($org, $family)['spent']);
     }
 
     public function test_payday_31_clamps_to_short_months(): void

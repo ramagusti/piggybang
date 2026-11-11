@@ -1,5 +1,5 @@
 "use client";
-import { BellOff, BellRing, MoreVertical, Pencil, Trash2, Wallet } from "lucide-react";
+import { BellOff, BellRing, MoreVertical, Pencil, Sparkles, Trash2, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Piggy } from "@/components/piggy/Piggy";
 import { CategoryDot } from "@/components/shared/CategoryPicker";
@@ -90,6 +90,12 @@ export function RuleCard({ rule, canWrite, onEdit, onDelete }: { rule: Rule; can
           <p className="text-sm text-muted-foreground">
             {t("budgets.limit")}: {f.money(rule.limit_amount)} / {t(rule.type === "weekly_limit" ? "budgets.perWeek" : "budgets.perMonth")}
           </p>
+          {(rule.ai_assign || rule.category_name) && (
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              {rule.ai_assign && <Sparkles className="size-3.5 text-primary" aria-hidden />}
+              {[rule.ai_assign && t("budgets.aiAssigned"), rule.category_name && `${t("budgets.keywords")}: “${rule.category_name}”`].filter(Boolean).join(" · ")}
+            </p>
+          )}
           {rule.type === "weekly_limit" && (
             <p className="text-sm text-muted-foreground">
               {t("budgets.rollover")}: {rule.rollover_enabled ? t("common.active") : t("common.inactive")}

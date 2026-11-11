@@ -54,6 +54,7 @@ class RuleController extends Controller
             'category_name' => 'nullable|string|max:100',
             'rollover_enabled' => 'boolean',
             'notify' => 'boolean',
+            'ai_assign' => 'boolean',
         ]);
         $type = $data['type'] ?? $rule?->type;
         if ($type !== 'payday') {
