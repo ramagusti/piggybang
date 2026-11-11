@@ -73,11 +73,16 @@ Artisan::command('push:keys', function () {
     $this->line("VAPID_PUBLIC_KEY={$k['publicKey']}\nVAPID_PRIVATE_KEY={$k['privateKey']}\nVAPID_SUBJECT=mailto:you@example.com");
 })->purpose('Print new Web Push keys for .env (run once; changing them invalidates every subscription)');
 
-Artisan::command('budgets:assign', function () {
-    $orgs = Organization::whereHas('rules', fn ($q) => $q->where('ai_assign', true))->get();
-    $orgs->each(fn ($org) => AssignBudget::forCycle($org));
-    $this->info("Queued AI budget picks for this cycle's expenses in {$orgs->count()} team(s).");
-})->purpose('Let the AI (re)pick budgets for every expense of the current cycle, for teams with AI budgets');
+Artisan::command('budgets:assign {org? : team id; default all teams with AI rules}', function (?string $org = null) {
+    $orgs = Organization::whereHas('rules', fn ($q) => $q->where('ai_assign', true))->when($org, fn ($q) => $q->whereKey($org))->get();
+    foreach ($orgs as $o) {
+        foreach (AssignBudget::cycleBatches($o) as $i => $ids) { // runs here, not on the queue, so you see what the AI did
+            $s = (new AssignBudget($o->id, $ids))->handle();
+            $this->line("{$o->name} batch ".($i + 1).': '.count($ids)." transactions, {$s['sent']} sent to the AI → {$s['picked']} filed, {$s['none']} in no rule"
+                .($s['sent'] > $s['picked'] + $s['none'] ? ' (unusable AI answer: see storage/logs/laravel.log)' : ''));
+        }
+    }
+})->purpose("Let the AI (re)file this cycle's transactions into AI budgets and payday rules, and show the result");
 
 Artisan::command('push:test {email}', function (string $email) {
     $user = User::where('email', $email)->firstOrFail();

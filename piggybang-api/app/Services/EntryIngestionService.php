@@ -19,15 +19,15 @@ class EntryIngestionService
     public static function ingest(Organization $org, array $entries, ?User $user, string $defaultSource = 'whatsapp'): array
     {
         $categories = $org->categories()->get();
-        $budgetIds = BudgetService::aiBudgets($org)->pluck('id');
-        $txs = DB::transaction(fn () => collect($entries)->map(function ($e) use ($org, $user, $categories, $budgetIds, $defaultSource) {
+        $aiIds = ['expense' => BudgetService::aiRules($org, 'expense')->pluck('id'), 'income' => BudgetService::aiRules($org, 'income')->pluck('id')];
+        $txs = DB::transaction(fn () => collect($entries)->map(function ($e) use ($org, $user, $categories, $aiIds, $defaultSource) {
             $cat = $categories->first(fn ($c) => $c->type === $e['type'] && isset($e['category']['id']) && $c->id === (int) $e['category']['id'])
                 ?? $categories->first(fn ($c) => $c->type === $e['type'] && mb_strtolower($c->name) === mb_strtolower(trim($e['category']['name'] ?? '')))
                 ?? $categories->first(fn ($c) => $c->type === $e['type'] && $c->is_system);
             $currency = strtoupper($e['value']['currency'] ?? $org->currency());
-            // AI's pick among AI budgets (BudgetService::matches): an id or null (= none). Unknown id → no pick (AssignBudget below).
-            $picked = $e['type'] === 'expense' && $budgetIds->isNotEmpty() && array_key_exists('budget_id', $e)
-                && ($e['budget_id'] === null || $budgetIds->contains((int) $e['budget_id']));
+            // AI's pick among AI rules of its kind (budget / payday): an id or null (= none). Unknown id → no pick (AssignBudget below).
+            $ids = $aiIds[$e['type']];
+            $picked = $ids->isNotEmpty() && array_key_exists('budget_id', $e) && ($e['budget_id'] === null || $ids->contains((int) $e['budget_id']));
 
             return TransactionService::create($org, ($picked ? ['metadata' => ['budget' => (int) $e['budget_id']]] : []) + [
                 'type' => $e['type'],
@@ -42,8 +42,8 @@ class EntryIngestionService
         }));
 
         // No usable pick (HTTP bridge, or the model skipped/invented one): let AssignBudget decide.
-        $unpicked = $txs->filter(fn ($tx) => $tx->type === 'expense' && BudgetService::budgetOf($tx->metadata) === null)->pluck('id');
-        if ($budgetIds->isNotEmpty() && $unpicked->isNotEmpty()) {
+        $unpicked = $txs->filter(fn ($tx) => $aiIds[$tx->type]->isNotEmpty() && BudgetService::budgetOf($tx->metadata) === null)->pluck('id');
+        if ($unpicked->isNotEmpty()) {
             AssignBudget::dispatch($org->id, $unpicked->values()->all());
         }
 

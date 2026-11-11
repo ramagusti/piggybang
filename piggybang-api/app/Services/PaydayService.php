@@ -72,27 +72,24 @@ class PaydayService
         return $candidate->gte($at) ? $candidate : $at->startOfMonth()->addMonth()->setDay(min($day, $at->startOfMonth()->addMonth()->daysInMonth));
     }
 
+    /**
+     * The salary: income that fits the rule's category and keywords (keywords also match the category name; "-word"
+     * excludes), and for an AI payday rule the AI picked as this salary. A non-AI rule with neither set spots nothing.
+     */
     private static function latestPaydayDate(Organization $org, UserRule $rule, CarbonImmutable $from, CarbonImmutable $to): ?CarbonImmutable
     {
-        $keywords = array_filter(array_map(fn ($k) => mb_strtolower(trim($k)), explode(',', (string) $rule->category_name)));
+        $filtered = $rule->category_id || BudgetService::keywords($rule)[0];
+        if (! $rule->ai_assign && ! $filtered) {
+            return null;
+        }
 
         $tx = $org->transactions()->where('transactions.type', 'income')
             ->whereBetween('transaction_time', [$from->utc(), $to->endOfDay()->utc()])
             ->leftJoin('transaction_categories as c', 'c.id', '=', 'transactions.category_id')
-            ->orderByDesc('transaction_time')->get(['transactions.transaction_time', 'transactions.category_id', 'transactions.description', 'c.name as category_label'])
-            ->first(function ($tx) use ($rule, $keywords) {
-                if ($rule->category_id && $tx->category_id == $rule->category_id) {
-                    return true;
-                }
-                $haystack = mb_strtolower($tx->category_label.' '.$tx->description);
-                foreach ($keywords as $k) {
-                    if ($k !== '' && str_contains($haystack, $k)) {
-                        return true;
-                    }
-                }
-
-                return false;
-            });
+            ->orderByDesc('transaction_time')
+            ->get(['transactions.transaction_time', 'transactions.category_id', 'transactions.description', 'transactions.metadata', 'c.name as category_label'])
+            ->first(fn ($tx) => BudgetService::fits($rule, $tx->category_id, BudgetService::incomeText($tx->category_label, $tx->description))
+                && (! $rule->ai_assign || BudgetService::budgetOf($tx->metadata) === $rule->id));
 
         return $tx ? CarbonImmutable::instance($tx->transaction_time)->setTimezone($org->timezone()) : null;
     }

@@ -376,7 +376,7 @@
       ],
       "payday": [
         "Payday sets the cycle: monthly limits and savings run from payday to payday.",
-        "Salary arrived early (up to 10 days before)? The cycle starts on the day it arrived. Piggy spots it by the income category you pick or keywords in the description, e.g. \"salary, gaji\".",
+        "Salary arrived early (up to 10 days before)? The cycle starts on the day it arrived. Piggy spots it by the income category and keywords you set (both must match; \"-bonus\" excludes), or, with \"Let Piggy AI decide\" on, Piggy reads each income and decides whether it is this salary.",
         "Paydays on the 29th to 31st move to the last day of shorter months.",
         "More than one salary? Mark one as primary. The primary one sets the cycle."
       ]
@@ -390,7 +390,9 @@
     "aiCategoryHint": "Optional. Piggy only picks this budget for expenses in this category.",
     "aiKeywordsHint": "Optional. Piggy only picks this budget when the description has one of these words, and never with a -word. Separate with commas, e.g. \"fuel, -tire\".",
     "aiAssigned": "Piggy AI decides",
-    "paydayKeywordsHint": "Helps spot salary that arrives early. Separate with commas.",
+    "paydayKeywordsHint": "Helps spot salary that arrives early. Separate with commas; put - in front to exclude, e.g. \"gaji, -bonus\".",
+    "aiPaydayOnHint": "Piggy reads each income and decides whether it is this salary, mostly by the rule's name. Give it a clear name, e.g. \"Rama's salary\". Category and keywords, if set, limit what it may pick.",
+    "aiPaydayOffHint": "Off: income matching the category and keywords below counts as this salary.",
     "limitHintWeekly": "Allowance per week.",
     "limitHintMonthly": "Allowance per payday cycle.",
     "rolloverProOnly": "Rollover only works on the Pro plan.",

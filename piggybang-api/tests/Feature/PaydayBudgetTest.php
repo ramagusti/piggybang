@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\AssignBudget;
 use App\Services\BudgetService;
 use App\Services\EntryIngestionService;
 use App\Services\PaydayService;
@@ -40,6 +41,30 @@ class PaydayBudgetTest extends TestCase
         $org->transactions()->create(['type' => 'income', 'amount' => 4500000, 'category_id' => $salary->id, 'transaction_time' => $this->jkt('2026-11-24 09:00')->utc()]);
         [$s, $e] = PaydayService::cycle($org, $this->jkt('2026-11-25'));
         $this->assertSame(['2026-11-24', '2026-12-25'], [$s->toDateString(), $e->toDateString()]);
+    }
+
+    public function test_payday_keywords_exclude_and_ai_payday_follows_the_pick(): void
+    {
+        [$owner, $org] = $this->makeOrg();
+        $salary = $this->cat($org, 'Salary', 'income');
+        $rule = $org->rules()->create(['name' => 'Gaji Rama', 'type' => 'payday', 'limit_amount' => 0, 'date_condition' => '26', 'is_primary_payday' => true,
+            'category_id' => $salary->id, 'category_name' => '-bonus']);
+        $income = fn ($desc, $date, $budget = false) => EntryIngestionService::ingest($org, [['type' => 'income', 'category' => ['id' => $salary->id],
+            'description' => $desc, 'value' => ['amount' => 1000000], 'datetime' => $this->jkt($date)->toIso8601String()]
+            + ($budget === false ? [] : ['budget_id' => $budget])], $owner);
+        $cycleStart = fn () => PaydayService::cycle($org, $this->jkt('2026-11-25'))[0]->toDateString();
+
+        $income('bonus tahunan', '2026-11-20 09:00');
+        $this->assertSame('2026-10-26', $cycleStart()); // excluded word → not the salary
+
+        $income('transfer kantor', '2026-11-22 09:00');
+        $this->assertSame('2026-11-22', $cycleStart());
+
+        $rule->update(['ai_assign' => true, 'category_name' => null]); // now only the AI's pick counts
+        $this->assertSame('2026-10-26', $cycleStart()); // earlier income was never picked
+        $income('gaji Rama', '2026-11-24 09:00', $rule->id);
+        $income('THR', '2026-11-24 10:00', null);
+        $this->assertSame('2026-11-24', $cycleStart());
     }
 
     public function test_memoized_reads_refresh_after_writes_in_same_app(): void
@@ -143,6 +168,17 @@ class PaydayBudgetTest extends TestCase
         $this->assertSame('100000.00', $spent($fuel));
         $this->assertSame('100000.00', $spent($notAir)); // only exclusions: everything else counts
         $this->assertSame('100000.00', $spent($ai));     // the AI's pick can't override an exclusion
+        $this->assertSame('5000.00', $spent($rule('bensin -mobil')));   // space-separated exclusion
+        $this->assertSame('0.00', $spent($rule('-angin -mobil')));
+    }
+
+    public function test_ai_answer_shapes(): void
+    {
+        $want = [5 => 7, 6 => 0];
+        $this->assertSame($want, AssignBudget::parsePicks(['picks' => [['id' => '5', 'budget_id' => 7], ['id' => 6, 'budget_id' => null]]]));
+        $this->assertSame($want, AssignBudget::parsePicks([['id' => 5, 'budget_id' => '7'], ['id' => 6]]));
+        $this->assertSame($want, AssignBudget::parsePicks(['5' => 7, '6' => ['budget_id' => null]]));
+        $this->assertSame([], AssignBudget::parsePicks(['error' => 'rate limited']));
     }
 
     public function test_expense_added_in_app_gets_an_ai_budget_pick(): void

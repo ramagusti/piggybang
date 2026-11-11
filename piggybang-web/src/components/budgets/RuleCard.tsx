@@ -57,6 +57,11 @@ export function RuleCard({ rule, canWrite, onEdit, onDelete }: { rule: Rule; can
                 {t("budgets.keywords")}: “{rule.category_name}”
               </p>
             )}
+            {rule.ai_assign && (
+              <p className="flex items-center gap-1 text-muted-foreground">
+                <Sparkles className="size-3.5 text-primary" aria-hidden /> {t("budgets.aiAssigned")}
+              </p>
+            )}
             {rule.cycle && (
               <p>
                 {t("budgets.cycle")}: {f.date(rule.cycle.start)} → {f.date(rule.cycle.end)}

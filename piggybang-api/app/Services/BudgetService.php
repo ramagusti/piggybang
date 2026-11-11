@@ -96,9 +96,10 @@ class BudgetService
     }
 
     /** @return array{0: list<string>, 1: list<string>} [keywords, excluded keywords] */
-    private static function keywords(UserRule $rule): array
+    public static function keywords(UserRule $rule): array
     {
-        $words = array_filter(array_map(fn ($k) => trim(mb_strtolower($k)), explode(',', (string) $rule->category_name)));
+        // Commas separate; exclusions may also just follow each other with spaces ("-raket -sepatu", "bensin -angin").
+        $words = array_filter(array_map(fn ($k) => trim(mb_strtolower($k)), preg_split('/,|\s+(?=-)/', (string) $rule->category_name)));
         $excluded = array_filter($words, fn ($k) => str_starts_with($k, '-'));
 
         return [
@@ -107,10 +108,17 @@ class BudgetService
         ];
     }
 
-    /** Budgets the AI files expenses into. */
-    public static function aiBudgets(Organization $org)
+    /** Payday keywords also match the category name ("salary" ↔ category "Salary"), as they always have. */
+    public static function incomeText(?string $categoryName, ?string $description): string
     {
-        return $org->rules()->whereIn('type', ['weekly_limit', 'monthly_limit'])->where('ai_assign', true)->with('category')->orderBy('id')->get();
+        return $categoryName.' '.$description;
+    }
+
+    /** AI rules that $type transactions are filed into: spending budgets for expenses, payday rules for income. */
+    public static function aiRules(Organization $org, string $type)
+    {
+        return $org->rules()->whereIn('type', $type === 'income' ? ['payday'] : ['weekly_limit', 'monthly_limit'])
+            ->where('ai_assign', true)->with('category')->orderBy('id')->get();
     }
 
     /** Prompt section asking for `budget_id`; shared by WhatsApp extraction and AssignBudget. */
@@ -118,15 +126,23 @@ class BudgetService
     {
         $lines = $rules->map(function ($r) {
             [$include, $exclude] = self::keywords($r);
+            $kind = ['weekly_limit' => 'weekly budget', 'monthly_limit' => 'monthly budget'][$r->type] ?? "payday (day {$r->date_condition})";
 
-            return "{$r->id}|".($r->type === 'weekly_limit' ? 'weekly' : 'monthly')."|{$r->name}|".($r->category?->name ?? 'any')
+            return "{$r->id}|$kind|{$r->name}|".($r->category?->name ?? 'any')
                 .'|'.(implode(', ', $include) ?: 'any').'|'.(implode(', ', $exclude) ?: '-');
         })->implode("\n");
 
         return <<<PROMPT
-BUDGETS (id|period|name|only category|only if description contains one of|never if description contains one of):
+RULES (id|kind|name|only category|only if description contains one of|never if description contains one of):
 {$lines}
-budget_id (expenses only): the ONE budget from BUDGETS this expense belongs to, judged by what it is and the occasion; the name says the budget's purpose. A budget only takes expenses that fit its category and words, when those are set. E.g. with "Makan harian" and "Makan besar keluarga": "makan siang 25rb" → Makan harian, "makan malam sama keluarga di resto 450rb" → Makan besar keluarga. null when none fits.
+budget_id: for an EXPENSE, the ONE budget from RULES it belongs to; the budget's name says its purpose. Weigh everything you know about the expense:
+- description and category: what was bought;
+- amount: a big bill points to a bigger occasion (family dinner at a restaurant) than a small one (a snack);
+- day and time: weekday lunch vs weekend or evening outing; a monthly bill on its usual date;
+- who recorded it: a budget named after a person or role (e.g. "anak", "istri") fits what that person buys.
+When several budgets share the expense's category, choose the one that fits best rather than null. E.g. with "Makan harian" and "Makan besar keluarga": "makan siang 25rb" on a Tuesday → Makan harian, "makan malam sama keluarga di resto 450rb" on a Saturday → Makan besar keluarga. null when no budget fits at all.
+For an INCOME, the payday rule from RULES whose salary this is (by the name, e.g. whose salary or which employer, plus amount, date and who recorded it); null when it is not that salary (bonus, refund, side income).
+A rule only takes transactions that fit its category and words, when those are set.
 PROMPT;
     }
 

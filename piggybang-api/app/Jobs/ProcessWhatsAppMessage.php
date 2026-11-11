@@ -165,7 +165,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
         $cats = $org->categories()->orderBy('type')->orderBy('sort_order')->get(['id', 'type', 'name'])
             ->map(fn ($c) => "{$c->id}|{$c->type}|{$c->name}")->implode("\n");
         $members = $org->memberships()->whereNotNull('user_id')->with('user')->get()->pluck('user.name')->implode(', ');
-        $aiBudgets = BudgetService::aiBudgets($org);
+        $aiBudgets = BudgetService::aiRules($org, 'expense')->concat(BudgetService::aiRules($org, 'income'));
         $budgets = $aiBudgets->isEmpty() ? '' : "\n".BudgetService::aiPrompt($aiBudgets);
         $budgetField = $aiBudgets->isEmpty() ? '' : ',"budget_id":number|null';
         $now = now($org->timezone());

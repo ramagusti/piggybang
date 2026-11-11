@@ -54,7 +54,7 @@ export function RuleForm({
         period: type === "weekly_limit" ? "weekly" : type === "monthly_limit" ? "monthly" : null,
         rollover_enabled: type === "weekly_limit" ? rollover : false,
         notify: payday ? false : notify,
-        ai_assign: payday ? false : aiAssign,
+        ai_assign: aiAssign,
         date_condition: payday ? day : null,
         category_name: keywords.trim() || null,
         is_primary_payday: payday ? primary : false,
@@ -89,15 +89,15 @@ export function RuleForm({
           <Label htmlFor="rule-name">{t("budgets.ruleName")}</Label>
           <Input id="rule-name" required value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        {!payday && (
-          <div className="space-y-1">
-            <div className="flex min-h-11 items-center justify-between gap-3">
-              <Label htmlFor="rule-ai">{t("budgets.aiAssignLabel")}</Label>
-              <Switch id="rule-ai" checked={aiAssign} onCheckedChange={setAiAssign} />
-            </div>
-            <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiAssignOnHint" : "budgets.aiAssignOffHint")}</p>
+        <div className="space-y-1">
+          <div className="flex min-h-11 items-center justify-between gap-3">
+            <Label htmlFor="rule-ai">{t("budgets.aiAssignLabel")}</Label>
+            <Switch id="rule-ai" checked={aiAssign} onCheckedChange={setAiAssign} />
           </div>
-        )}
+          <p className="text-xs text-muted-foreground">
+            {t(payday ? (aiAssign ? "budgets.aiPaydayOnHint" : "budgets.aiPaydayOffHint") : aiAssign ? "budgets.aiAssignOnHint" : "budgets.aiAssignOffHint")}
+          </p>
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="rule-cat">{t("tx.category")}</Label>
           <CategoryPicker id="rule-cat" categories={categories} value={categoryId} onChange={setCategoryId} onClear={() => setCategoryId(null)} />
@@ -141,7 +141,7 @@ export function RuleForm({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rule-kw">{t("budgets.keywords")}</Label>
-              <Input id="rule-kw" placeholder="gajian, salary" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
+              <Input id="rule-kw" placeholder="gajian, salary, -bonus" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
               <p className="text-xs text-muted-foreground">{t("budgets.paydayKeywordsHint")}</p>
             </div>
             <div className="flex items-center gap-2">

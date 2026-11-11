@@ -34,7 +34,7 @@ class RuleController extends Controller
         $wasAi = $rule->ai_assign;
         $rule->update($this->validated($request, $org, $rule));
         $this->enforceSinglePrimary($org, $rule);
-        if (($wasAi || $rule->ai_assign) && $rule->wasChanged(['ai_assign', 'name', 'type', 'category_id', 'category_name'])) {
+        if (($wasAi || $rule->ai_assign) && $rule->wasChanged(['ai_assign', 'name', 'type', 'category_id', 'category_name', 'date_condition'])) {
             AssignBudget::forCycle($org);
         }
 

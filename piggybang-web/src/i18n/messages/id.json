@@ -376,7 +376,7 @@
       ],
       "payday": [
         "Tanggal gajian menentukan siklus: limit bulanan dan tabungan dihitung dari gajian ke gajian.",
-        "Gaji masuk lebih awal (paling cepat 10 hari sebelumnya)? Siklus otomatis mulai di hari gaji masuk. Piggy mengenalinya dari kategori pemasukan yang dipilih atau kata kunci di deskripsi, misalnya \"gaji, salary\".",
+        "Gaji masuk lebih awal (paling cepat 10 hari sebelumnya)? Siklus otomatis mulai di hari gaji masuk. Piggy mengenalinya dari kategori pemasukan dan kata kunci yang diisi (keduanya harus cocok; \"-bonus\" mengecualikan), atau kalau \"Biar Piggy AI yang memilih\" menyala, Piggy membaca tiap pemasukan dan memutuskan apakah itu gaji ini.",
         "Tanggal 29 sampai 31 di bulan yang lebih pendek otomatis jadi tanggal terakhir bulan itu.",
         "Punya lebih dari satu gaji? Tandai satu sebagai utama. Yang utama dipakai untuk menghitung siklus."
       ]
@@ -390,7 +390,9 @@
     "aiCategoryHint": "Opsional. Piggy hanya memilih anggaran ini untuk pengeluaran di kategori ini.",
     "aiKeywordsHint": "Opsional. Piggy hanya memilih anggaran ini kalau deskripsinya mengandung salah satu kata ini, dan tidak pernah kalau ada kata ber-tanda -. Pisahkan dengan koma, misalnya \"bensin, -angin\".",
     "aiAssigned": "Dipilih Piggy AI",
-    "paydayKeywordsHint": "Untuk mengenali gaji yang masuk lebih awal. Pisahkan dengan koma.",
+    "paydayKeywordsHint": "Untuk mengenali gaji yang masuk lebih awal. Pisahkan dengan koma; beri tanda - di depan untuk mengecualikan, misalnya \"gaji, -bonus\".",
+    "aiPaydayOnHint": "Piggy membaca tiap pemasukan dan memutuskan apakah itu gaji ini, terutama dari nama aturannya. Beri nama yang jelas, misalnya \"Gaji Rama\". Kategori dan kata kunci, kalau diisi, membatasi pilihannya.",
+    "aiPaydayOffHint": "Mati: pemasukan yang cocok dengan kategori dan kata kunci di bawah dihitung sebagai gaji ini.",
     "limitHintWeekly": "Jatah per minggu.",
     "limitHintMonthly": "Jatah per siklus gajian.",
     "rolloverProOnly": "Rollover hanya aktif di paket Pro.",
