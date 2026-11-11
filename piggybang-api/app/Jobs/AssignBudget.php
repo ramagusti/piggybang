@@ -90,7 +90,7 @@ class AssignBudget implements ShouldQueue
     private function ask(Organization $org, $rules, $txs): array
     {
         $out = AiClient::json([
-            ['role' => 'system', 'content' => "You file transactions of a family finance app into the rules below. Reply ONLY JSON {\"picks\":[{\"id\":transaction id,\"budget_id\":number|null}]}, one pick per transaction.\n"
+            ['role' => 'system', 'content' => "You file transactions of a family finance app into the rules below. Reply ONLY JSON {\"picks\":{\"<transaction id>\":rule id or null}} with one entry per transaction, e.g. {\"picks\":{\"3088\":8,\"3089\":null}}.\n"
                 .BudgetService::aiPrompt($rules)],
             ['role' => 'user', 'content' => json_encode($txs->map(fn ($tx) => [
                 'id' => $tx->id, 'type' => $tx->type, 'description' => $tx->description, 'category' => $tx->category?->name,
