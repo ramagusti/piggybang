@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,13 +34,14 @@ export function CategoryDot({
   );
 }
 
-/** Searchable category combobox: recent first, optional "create new". */
+/** Searchable category combobox: recent first, optional "create new" and "no category" (onClear). */
 export function CategoryPicker({
   categories,
   value,
   onChange,
   recentIds = [],
   onCreate,
+  onClear,
   id,
   invalid,
 }: {
@@ -49,6 +50,7 @@ export function CategoryPicker({
   onChange: (id: number) => void;
   recentIds?: number[];
   onCreate?: (name: string) => void;
+  onClear?: () => void;
   id?: string;
   invalid?: boolean;
 }) {
@@ -119,6 +121,19 @@ export function CategoryPicker({
           />
           <CommandList>
             <CommandEmpty>{t("category.none")}</CommandEmpty>
+            {onClear && value !== null && (
+              <CommandGroup>
+                <CommandItem
+                  value="clear-category"
+                  onSelect={() => {
+                    onClear();
+                    setOpen(false);
+                  }}
+                >
+                  <X /> {t("category.clear")}
+                </CommandItem>
+              </CommandGroup>
+            )}
             {recent.length > 0 && (
               <CommandGroup heading={t("category.recent")}>
                 {recent.map((c) => item(c, "r"))}

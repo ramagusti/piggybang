@@ -69,29 +69,30 @@ class BudgetService
         [$f, $t] = [$from->timestamp, $to->timestamp];
 
         return self::cycleExpenses($org, $cycleStart, $cycleEnd)
-            // A budget created after the expense was recorded wasn't on the AI's list, so its pick doesn't apply to it.
-            ->filter(fn ($e) => $e['at'] >= $f && $e['at'] <= $t
-                && self::matches($rule, $e['category_id'], $e['description'], $rule->created_at?->timestamp > $e['recorded'] ? null : $e['budget']))
+            ->filter(fn ($e) => $e['at'] >= $f && $e['at'] <= $t && self::matches($rule, $e['category_id'], $e['description'], $e['budget']))
             ->sum('amount');
     }
 
     /**
-     * Does an expense count toward $rule? The category (if set) and the comma-separated keywords must match: any
-     * keyword in the description, none of the "-excluded" ones ("bensin, pertalite, -angin"). Nothing set → every expense.
-     * AI budgets (ai_assign) additionally need the AI's pick for the expense ($budget: rule id, 0 = none). Without a pick
-     * (budget created after the expense, AI unavailable) they fall back to category/keywords, and count nothing without either.
+     * Does an expense count toward $rule? It must fit the rule's category and keywords, and for an AI budget (ai_assign)
+     * the AI must also have picked this rule for it ($budget: rule id; 0/null = none or not picked yet, see AssignBudget).
      */
     public static function matches(UserRule $rule, ?int $categoryId, ?string $description, ?int $budget = null): bool
+    {
+        return self::fits($rule, $categoryId, $description) && (! $rule->ai_assign || $budget === $rule->id);
+    }
+
+    /**
+     * Category (if set) and comma-separated keywords: any keyword in the description, none of the "-excluded" ones
+     * ("bensin, pertalite, -angin"). Nothing set → every expense.
+     */
+    public static function fits(UserRule $rule, ?int $categoryId, ?string $description): bool
     {
         [$include, $exclude] = self::keywords($rule);
         $description = mb_strtolower((string) $description);
         $has = fn (array $words) => (bool) array_filter($words, fn ($k) => str_contains($description, $k));
-        $passes = (! $rule->category_id || $categoryId == $rule->category_id) && (! $include || $has($include)) && ! $has($exclude);
-        if (! $rule->ai_assign) {
-            return $passes;
-        }
 
-        return $passes && ($budget !== null ? $budget === $rule->id : ($rule->category_id || $include));
+        return (! $rule->category_id || $categoryId == $rule->category_id) && (! $include || $has($include)) && ! $has($exclude);
     }
 
     /** @return array{0: list<string>, 1: list<string>} [keywords, excluded keywords] */
@@ -139,10 +140,9 @@ PROMPT;
     {
         return Memo::get("cycle-expenses:{$org->id}:{$start->timestamp}:{$end->timestamp}", fn () => $org->transactions()
             ->where('type', 'expense')->whereBetween('transaction_time', [$start->utc(), $end->utc()])
-            ->toBase()->get(['transaction_time', 'category_id', 'description', 'amount', 'currency', 'metadata', 'created_at'])
+            ->toBase()->get(['transaction_time', 'category_id', 'description', 'amount', 'currency', 'metadata'])
             ->map(fn ($r) => [
                 'at' => CarbonImmutable::parse($r->transaction_time, 'UTC')->timestamp,
-                'recorded' => CarbonImmutable::parse($r->created_at, 'UTC')->timestamp,
                 'category_id' => $r->category_id,
                 'description' => mb_strtolower((string) $r->description),
                 'budget' => self::budgetOf(json_decode((string) $r->metadata, true) ?: []),

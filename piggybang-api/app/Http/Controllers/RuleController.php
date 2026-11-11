@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\RuleResource;
+use App\Jobs\AssignBudget;
 use App\Models\Organization;
 use App\Models\UserRule;
 use Illuminate\Http\Request;
@@ -21,14 +22,21 @@ class RuleController extends Controller
     {
         $rule = $org->rules()->create($this->validated($request, $org));
         $this->enforceSinglePrimary($org, $rule);
+        if ($rule->ai_assign) {
+            AssignBudget::forCycle($org); // the AI re-files this cycle's expenses with the new budget on its list
+        }
 
         return (new RuleResource($rule->load('category')))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, Organization $org, UserRule $rule)
     {
+        $wasAi = $rule->ai_assign;
         $rule->update($this->validated($request, $org, $rule));
         $this->enforceSinglePrimary($org, $rule);
+        if (($wasAi || $rule->ai_assign) && $rule->wasChanged(['ai_assign', 'name', 'type', 'category_id', 'category_name'])) {
+            AssignBudget::forCycle($org);
+        }
 
         return new RuleResource($rule->load('category'));
     }
@@ -36,6 +44,9 @@ class RuleController extends Controller
     public function destroy(Organization $org, UserRule $rule)
     {
         $rule->delete();
+        if ($rule->ai_assign) {
+            AssignBudget::forCycle($org);
+        }
 
         return response()->noContent();
     }

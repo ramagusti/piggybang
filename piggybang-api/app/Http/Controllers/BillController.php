@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\BillResource;
 use App\Http\Resources\TransactionResource;
+use App\Jobs\AssignBudget;
 use App\Models\Bill;
 use App\Models\Organization;
 use App\Services\TransactionService;
@@ -54,6 +55,7 @@ class BillController extends Controller
             return $tx;
         });
         TransactionService::afterWrite($org);
+        AssignBudget::dispatch($org->id, [$tx->id]);
 
         return ['bill' => new BillResource($bill), 'transaction' => new TransactionResource($tx)];
     }

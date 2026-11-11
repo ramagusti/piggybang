@@ -77,21 +77,54 @@ class PaydayBudgetTest extends TestCase
             $entry('makan siang', 25000, $daily->id),
             $entry('makan malam keluarga', 450000, $family->id),
             $entry('kopi', 10000, $anyAi->id),
-            $entry('roti', 1000, 999999), // unknown id → no pick: AI budgets fall back to their category
+            $entry('roti', 1000, 999999),          // unknown id → no pick (AI unavailable in tests) → no AI budget counts it
             $entry('es teh', 5000, $foodRule->id), // not an AI budget → no pick either
         ], $owner);
         $spent = fn ($r) => BudgetService::progress($org, $r)['spent'];
 
-        $this->assertSame('31000.00', $spent($daily));
-        $this->assertSame('456000.00', $spent($family));
-        $this->assertSame('10000.00', $spent($anyAi)); // fallback without a filter counts nothing
-        $this->assertSame('491000.00', $spent($foodRule));
+        $this->assertSame('25000.00', $spent($daily));    // same category as $family, but only its own picks
+        $this->assertSame('450000.00', $spent($family));
+        $this->assertSame('10000.00', $spent($anyAi));
+        $this->assertSame('491000.00', $spent($foodRule)); // category only: everything in it
         $this->assertSame('491000.00', $spent($total));
+    }
 
-        // Created after those were recorded → the AI never saw it, so category AND keyword decide.
-        $this->travel(1)->minutes();
-        $coffee = $rule('Ngopi', ['ai_assign' => true, 'category_id' => $food->id, 'category_name' => 'kopi, teh']);
-        $this->assertSame('15000.00', $spent($coffee));
+    /** Fake AI for AssignBudget: answers each expense in the batch with $pick(expense). */
+    private function fakeBudgetAi(callable $pick): void
+    {
+        config(['services.ai.key' => 'k', 'services.ai.base_url' => 'https://ai.test/v1']);
+        Http::fake(['ai.test/*' => fn ($request) => Http::response(['choices' => [['message' => ['content' => json_encode([
+            'picks' => array_map(fn ($e) => ['id' => $e['id'], 'budget_id' => $pick($e)], json_decode($request['messages'][1]['content'], true)),
+        ])]]]])]);
+    }
+
+    public function test_creating_ai_budgets_lets_the_ai_file_this_cycles_expenses(): void
+    {
+        [$owner, $org] = $this->makeOrg();
+        $health = $this->cat($org, 'Health, Selfcare & Beauty');
+        foreach ([['lipstik', 150000], ['vitamin', 80000], ['sabun cuci muka', 40000]] as [$desc, $amount]) {
+            $org->transactions()->create(['type' => 'expense', 'category_id' => $health->id, 'amount' => $amount, 'description' => $desc, 'transaction_time' => now()]);
+        }
+        $org->transactions()->create(['type' => 'expense', 'amount' => 20000, 'description' => 'parkir', 'transaction_time' => now()]); // other category
+        $id = fn ($name) => $org->rules()->where('name', 'like', "$name%")->value('id');
+        $picker = fn ($e) => in_array($e['description'], ['lipstik', 'sabun cuci muka'], true) ? $id('Beauty') : null;
+        $this->fakeBudgetAi(function ($e) use (&$picker) {
+            $this->assertNotSame('parkir', $e['description']); // no AI budget could take it → never sent to the AI
+
+            return $picker($e);
+        });
+        Sanctum::actingAs($owner, ['*']);
+        $create = fn ($name) => $this->postJson("/api/organizations/{$org->id}/rules", ['name' => $name, 'type' => 'monthly_limit',
+            'limit_amount' => 1000000, 'category_id' => $health->id, 'ai_assign' => true])->assertCreated()->json('id');
+        $spent = fn () => collect($this->getJson("/api/organizations/{$org->id}/rules")->json())->pluck('progress.spent', 'name')->all();
+
+        $create('Beauty fund');
+        $this->assertSame(['Beauty fund' => '190000.00'], $spent());
+
+        $healthFund = $create('Health fund'); // re-files the cycle with both budgets on the list
+        $picker = fn ($e) => $e['description'] === 'vitamin' ? $id('Health') : $id('Beauty');
+        $this->patchJson("/api/organizations/{$org->id}/rules/{$healthFund}", ['name' => 'Health fund (vitamins)'])->assertOk();
+        $this->assertSame(['Beauty fund' => '190000.00', 'Health fund (vitamins)' => '80000.00'], $spent());
     }
 
     public function test_excluded_keywords(): void
@@ -114,12 +147,11 @@ class PaydayBudgetTest extends TestCase
 
     public function test_expense_added_in_app_gets_an_ai_budget_pick(): void
     {
-        config(['services.ai.key' => 'k', 'services.ai.base_url' => 'https://ai.test/v1']);
         [$owner, $org] = $this->makeOrg();
         $food = $this->cat($org, 'Food & Beverages');
         $daily = $org->rules()->create(['name' => 'Makan harian', 'type' => 'weekly_limit', 'limit_amount' => 500000, 'category_id' => $food->id, 'ai_assign' => true]);
         $family = $org->rules()->create(['name' => 'Makan besar keluarga', 'type' => 'monthly_limit', 'limit_amount' => 2000000, 'category_id' => $food->id, 'ai_assign' => true]);
-        Http::fake(['ai.test/*' => Http::response(['choices' => [['message' => ['content' => json_encode(['budget_id' => $family->id])]]]])]);
+        $this->fakeBudgetAi(fn () => $family->id);
         Sanctum::actingAs($owner, ['*']);
 
         $this->postJson("/api/organizations/{$org->id}/transactions", ['type' => 'expense', 'category_id' => $food->id, 'amount' => 450000,

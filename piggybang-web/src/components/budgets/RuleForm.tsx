@@ -100,7 +100,7 @@ export function RuleForm({
         )}
         <div className="space-y-1.5">
           <Label htmlFor="rule-cat">{t("tx.category")}</Label>
-          <CategoryPicker id="rule-cat" categories={categories} value={categoryId} onChange={setCategoryId} />
+          <CategoryPicker id="rule-cat" categories={categories} value={categoryId} onChange={setCategoryId} onClear={() => setCategoryId(null)} />
           {!payday && <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiCategoryHint" : "budgets.categoryHint")}</p>}
         </div>
         {!payday && (

@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\AssignBudget;
 use App\Models\Bill;
 use App\Models\Organization;
 use App\Models\Transaction;
@@ -71,6 +72,12 @@ Artisan::command('push:keys', function () {
     $k = VAPID::createVapidKeys();
     $this->line("VAPID_PUBLIC_KEY={$k['publicKey']}\nVAPID_PRIVATE_KEY={$k['privateKey']}\nVAPID_SUBJECT=mailto:you@example.com");
 })->purpose('Print new Web Push keys for .env (run once; changing them invalidates every subscription)');
+
+Artisan::command('budgets:assign', function () {
+    $orgs = Organization::whereHas('rules', fn ($q) => $q->where('ai_assign', true))->get();
+    $orgs->each(fn ($org) => AssignBudget::forCycle($org));
+    $this->info("Queued AI budget picks for this cycle's expenses in {$orgs->count()} team(s).");
+})->purpose('Let the AI (re)pick budgets for every expense of the current cycle, for teams with AI budgets');
 
 Artisan::command('push:test {email}', function (string $email) {
     $user = User::where('email', $email)->firstOrFail();

@@ -305,6 +305,7 @@
   "category": {
     "pickPlaceholder": "Cari atau pilih...",
     "none": "Tidak ada kategori.",
+    "clear": "Tanpa kategori",
     "recent": "Terakhir",
     "all": "Semua",
     "createNamed": "Buat baru: {name}",
@@ -384,7 +385,7 @@
     "limitKeywordsHint": "Pisahkan dengan koma. Beri tanda - di depan untuk mengecualikan: \"bensin, -angin\". Kalau ada kategori, hanya pengeluaran di kategori itu yang cocok yang dihitung.",
     "categoryHint": "Opsional. Kosongkan kalau cukup pakai kata kunci.",
     "aiAssignLabel": "Biar Piggy AI yang memilih",
-    "aiAssignOnHint": "Piggy membaca tiap pengeluaran dan memilih satu anggaran yang paling cocok, terutama dari nama anggarannya. Beri nama yang jelas, misalnya \"Makan besar keluarga\".",
+    "aiAssignOnHint": "Piggy membaca tiap pengeluaran dan memilih satu anggaran yang paling cocok, terutama dari nama anggarannya. Beri nama yang jelas, misalnya \"Makan besar keluarga\". Menyimpan akan memilah ulang pengeluaran siklus ini.",
     "aiAssignOffHint": "Mati: semua pengeluaran yang cocok dengan kategori dan kata kunci di bawah dihitung.",
     "aiCategoryHint": "Opsional. Piggy hanya memilih anggaran ini untuk pengeluaran di kategori ini.",
     "aiKeywordsHint": "Opsional. Piggy hanya memilih anggaran ini kalau deskripsinya mengandung salah satu kata ini, dan tidak pernah kalau ada kata ber-tanda -. Pisahkan dengan koma, misalnya \"bensin, -angin\".",

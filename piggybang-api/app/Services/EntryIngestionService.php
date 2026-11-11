@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\AssignBudget;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -24,7 +25,7 @@ class EntryIngestionService
                 ?? $categories->first(fn ($c) => $c->type === $e['type'] && mb_strtolower($c->name) === mb_strtolower(trim($e['category']['name'] ?? '')))
                 ?? $categories->first(fn ($c) => $c->type === $e['type'] && $c->is_system);
             $currency = strtoupper($e['value']['currency'] ?? $org->currency());
-            // AI's pick among AI budgets (BudgetService::matches): an id or null (= none). Unknown id → ignored (category/keyword fallback).
+            // AI's pick among AI budgets (BudgetService::matches): an id or null (= none). Unknown id → no pick (AssignBudget below).
             $picked = $e['type'] === 'expense' && $budgetIds->isNotEmpty() && array_key_exists('budget_id', $e)
                 && ($e['budget_id'] === null || $budgetIds->contains((int) $e['budget_id']));
 
@@ -39,6 +40,12 @@ class EntryIngestionService
                 'confidence' => $e['confidence'] ?? null,
             ], $user, in_array($e['source'] ?? null, ['web', 'whatsapp', 'api', 'import'], true) ? $e['source'] : $defaultSource);
         }));
+
+        // No usable pick (HTTP bridge, or the model skipped/invented one): let AssignBudget decide.
+        $unpicked = $txs->filter(fn ($tx) => $tx->type === 'expense' && BudgetService::budgetOf($tx->metadata) === null)->pluck('id');
+        if ($budgetIds->isNotEmpty() && $unpicked->isNotEmpty()) {
+            AssignBudget::dispatch($org->id, $unpicked->values()->all());
+        }
 
         return [
             'transactions' => $txs,

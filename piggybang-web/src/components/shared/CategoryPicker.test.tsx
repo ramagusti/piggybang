@@ -23,6 +23,20 @@ describe("CategoryPicker", () => {
     expect(onChange).toHaveBeenCalledWith(2);
   });
 
+  it("offers 'no category' only when clearable and something is picked", async () => {
+    const onClear = vi.fn();
+    const { unmount } = renderUI(
+      <CategoryPicker categories={cats} value={null} onChange={() => {}} onClear={onClear} />,
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(screen.queryByText("Tanpa kategori")).not.toBeInTheDocument();
+    unmount();
+    renderUI(<CategoryPicker categories={cats} value={2} onChange={() => {}} onClear={onClear} />);
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(screen.getByText("Tanpa kategori"));
+    expect(onClear).toHaveBeenCalled();
+  });
+
   it("lists recent first and offers create-new", async () => {
     const onCreate = vi.fn();
     renderUI(

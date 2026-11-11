@@ -305,6 +305,7 @@
   "category": {
     "pickPlaceholder": "Search or pick...",
     "none": "No categories.",
+    "clear": "No category",
     "recent": "Recent",
     "all": "All",
     "createNamed": "Create: {name}",
@@ -384,7 +385,7 @@
     "limitKeywordsHint": "Separate with commas. Put - in front to exclude: \"fuel, -tire\". With a category, only expenses in that category that match count.",
     "categoryHint": "Optional. Leave empty to match by keywords only.",
     "aiAssignLabel": "Let Piggy AI decide",
-    "aiAssignOnHint": "Piggy reads each expense and picks the one budget it belongs to, mostly by budget name. Give it a clear name, e.g. \"Family dinners\".",
+    "aiAssignOnHint": "Piggy reads each expense and picks the one budget it belongs to, mostly by budget name. Give it a clear name, e.g. \"Family dinners\". Saving re-sorts this cycle's expenses.",
     "aiAssignOffHint": "Off: every expense matching the category and keywords below counts.",
     "aiCategoryHint": "Optional. Piggy only picks this budget for expenses in this category.",
     "aiKeywordsHint": "Optional. Piggy only picks this budget when the description has one of these words, and never with a -word. Separate with commas, e.g. \"fuel, -tire\".",
