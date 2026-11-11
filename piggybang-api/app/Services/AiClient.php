@@ -13,10 +13,10 @@ class AiClient
     }
 
     /** @param array $messages OpenAI chat messages. Returns decoded JSON object from the model. */
-    public static function json(array $messages, ?string $model = null): array
+    public static function json(array $messages, ?string $model = null, int $timeout = 25): array
     {
         // 25s: a WhatsApp user is waiting; the queue job retries once on timeout.
-        $res = Http::withToken(config('services.ai.key'))->timeout(25)
+        $res = Http::withToken(config('services.ai.key'))->timeout($timeout)
             ->post(rtrim(config('services.ai.base_url'), '/').'/chat/completions', [
                 'model' => $model ?? config('services.ai.model'),
                 'messages' => $messages,

@@ -41,7 +41,8 @@ Savings { cycle_start, cycle_end, income_total, expense_total, net_savings }
 SavingsCurrent = Savings & { previous_net: string|null, trend: 'improving'|'worsening'|'flat', progress_pct: number } // progress_pct = expense/income*100
 Bill {
   id, name, amount, currency, due_date, recurrence: 'monthly'|'quarterly'|'yearly'|'one_time',
-  category_id, destination_account, destination_number, is_active, last_paid_at,
+  category_id, category: {id,name,icon,color}|null, created_by: {id,name}|null /*who added it*/,
+  destination_account, destination_number, is_active, last_paid_at,
   days_until_due: number, status: 'overdue'|'due_soon'|'upcoming'|'normal'|'paid'   // due_soon ≤3d, upcoming ≤7d
 }
 Member { id /*membership id*/, user: {id,name,email,avatar_url}|null, email, role, pending: boolean, joined_at, invitation_accepted_at }
@@ -121,7 +122,7 @@ Roles → permissions:
 ## Savings / Bills
 | GET | /organizations/{org}/savings | SavingsCurrent |
 | GET | /organizations/{org}/savings/history | `Savings[]` newest first |
-| GET/POST | /organizations/{org}/bills | `Bill[]` sorted by due_date / create |
+| GET/POST | /organizations/{org}/bills | `Bill[]` sorted by due_date / create. No category_id → guessed from the name (AI over the team's expense categories, else the bills-like category) |
 | PATCH/DELETE | /organizations/{org}/bills/{bill} | |
 | POST | /organizations/{org}/bills/{bill}/pay | creates expense transaction, advances due_date if recurring → `{bill, transaction}` |
 

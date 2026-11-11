@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { Camera, Loader2, Sparkles, Split } from "lucide-react";
+import { Camera, Loader2, Sparkles, Split, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrg } from "@/components/layout/AppShell";
@@ -67,6 +67,7 @@ export function TransactionForm({
   multiCurrency = false,
   onSubmit,
   onCancel,
+  onDelete,
   onOcr,
   onCreateCategory,
 }: {
@@ -77,6 +78,7 @@ export function TransactionForm({
   multiCurrency?: boolean;
   onSubmit: (v: TxFormValues) => Promise<unknown>;
   onCancel?: () => void;
+  onDelete?: () => void; // editing only
   onOcr?: (file: File) => Promise<{
     amount: number | null;
     description: string | null;
@@ -377,6 +379,16 @@ export function TransactionForm({
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
+        {onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="mr-auto text-danger hover:text-danger"
+            onClick={onDelete}
+          >
+            <Trash2 aria-hidden /> {t("common.delete")}
+          </Button>
+        )}
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             {t("common.cancel")}
@@ -401,10 +413,12 @@ export function TransactionDialog({
   open,
   onOpenChange,
   transaction,
+  onDelete,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   transaction?: Transaction;
+  onDelete?: (tx: Transaction) => void;
 }) {
   const t = useTranslations();
   const { org, isPro, can } = useOrg();
@@ -478,6 +492,14 @@ export function TransactionDialog({
         multiCurrency={isPro}
         onSubmit={onSubmit}
         onCancel={() => onOpenChange(false)}
+        onDelete={
+          transaction && onDelete
+            ? () => {
+                onOpenChange(false);
+                onDelete(transaction);
+              }
+            : undefined
+        }
         onOcr={async (file) => {
           const body = new FormData();
           body.append("image", file);

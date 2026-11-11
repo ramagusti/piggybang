@@ -168,7 +168,7 @@ export default function TransactionsPage() {
         </nav>
       )}
 
-      <TransactionDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} />
+      <TransactionDialog open={formOpen} onOpenChange={setFormOpen} transaction={editing} onDelete={canWrite ? remove : undefined} />
       <ImportDialog orgId={org.id} open={importOpen} onOpenChange={setImportOpen} />
     </>
   );

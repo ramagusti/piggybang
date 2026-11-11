@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircle2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CategoryDot } from "@/components/shared/CategoryPicker";
 import { Piggy } from "@/components/piggy/Piggy";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -69,6 +70,17 @@ export function BillCard({
       <p className={cn("text-sm font-medium", urgent ? "text-danger uppercase" : bill.status === "upcoming" ? "text-warning" : "text-muted-foreground")}>
         {paid ? t("bills.paidOn", { date: f.date(bill.last_paid_at) }) : due}
       </p>
+      {(bill.category || bill.created_by) && (
+        <p className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
+          {bill.category && (
+            <>
+              <CategoryDot category={bill.category} /> {bill.category.name}
+            </>
+          )}
+          {bill.category && bill.created_by && <span aria-hidden>·</span>}
+          {bill.created_by && t("bills.addedBy", { name: bill.created_by.name })}
+        </p>
+      )}
       {(bill.destination_account || bill.destination_number) && (
         <p className="text-sm text-muted-foreground">
           {t("bills.via")}: {[bill.destination_account, bill.destination_number].filter(Boolean).join(" · ")}

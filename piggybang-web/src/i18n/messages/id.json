@@ -403,6 +403,8 @@
     "today": "Hari ini",
     "overdue": "Lewat {days} hari",
     "via": "Via",
+    "addedBy": "oleh {name}",
+    "categoryAuto": "Kosongkan saja: kategori dipilih otomatis dari nama tagihan.",
     "pay": "Bayar",
     "paid": "Lunas",
     "paidOn": "Lunas {date}",

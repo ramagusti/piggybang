@@ -121,6 +121,8 @@ export interface Bill {
   due_date: string;
   recurrence: "monthly" | "quarterly" | "yearly" | "one_time";
   category_id: number | null;
+  category: { id: number; name: string; icon: string | null; color: string | null } | null;
+  created_by: { id: number; name: string } | null; // who added it; null for bills older than this field
   destination_account: string | null;
   destination_number: string | null;
   is_active: boolean;

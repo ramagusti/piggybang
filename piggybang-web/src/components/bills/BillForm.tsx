@@ -75,6 +75,7 @@ export function BillForm({ orgId, bill, open, onOpenChange }: { orgId: number; b
         <div className="space-y-1.5">
           <Label htmlFor="bill-cat">{t("tx.category")}</Label>
           <CategoryPicker id="bill-cat" categories={categories} value={v.category_id} onChange={(category_id) => setV({ ...v, category_id })} />
+          {!v.category_id && <p className="text-xs text-muted-foreground">{t("bills.categoryAuto")}</p>}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">

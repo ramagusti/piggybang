@@ -15,19 +15,19 @@ class BillController extends Controller
 {
     public function index(Organization $org)
     {
-        return BillResource::collection($org->bills()->orderByDesc('is_active')->orderBy('due_date')->get());
+        return BillResource::collection($org->bills()->with(['category', 'creator'])->orderByDesc('is_active')->orderBy('due_date')->get());
     }
 
     public function store(Request $request, Organization $org)
     {
-        $bill = $org->bills()->create($this->validated($request, $org));
+        $bill = $org->bills()->create($this->withCategory($this->validated($request, $org), $org) + ['created_by' => $request->user()->id]);
 
         return (new BillResource($bill))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, Organization $org, Bill $bill)
     {
-        $bill->update($this->validated($request, $org, true));
+        $bill->update($this->withCategory($this->validated($request, $org, true), $org, $bill));
 
         return new BillResource($bill);
     }
@@ -42,6 +42,7 @@ class BillController extends Controller
     public function pay(Request $request, Organization $org, Bill $bill)
     {
         abort_unless($bill->is_active, 422, 'Tagihan sudah dibayar.');
+        $bill->category_id ??= Bill::guessCategoryId($org, $bill->name); // bills saved before categories were guessed
         $tx = DB::transaction(function () use ($request, $org, $bill) {
             $tx = TransactionService::create($org, [
                 'type' => 'expense', 'category_id' => $bill->category_id, 'amount' => $bill->amount, 'currency' => $bill->currency,
@@ -55,6 +56,16 @@ class BillController extends Controller
         TransactionService::afterWrite($org);
 
         return ['bill' => new BillResource($bill), 'transaction' => new TransactionResource($tx)];
+    }
+
+    /** No category chosen → guess it from the name. */
+    private function withCategory(array $data, Organization $org, ?Bill $bill = null): array
+    {
+        if (empty($data['category_id']) && ! $bill?->category_id && ($name = $data['name'] ?? $bill?->name)) {
+            $data['category_id'] = Bill::guessCategoryId($org, $name);
+        }
+
+        return $data;
     }
 
     private function validated(Request $request, Organization $org, bool $partial = false): array

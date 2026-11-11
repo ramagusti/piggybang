@@ -403,6 +403,8 @@
     "today": "Today",
     "overdue": "{days, plural, one {# day} other {# days}} overdue",
     "via": "Via",
+    "addedBy": "by {name}",
+    "categoryAuto": "Leave empty: the category is picked automatically from the bill name.",
     "pay": "Pay",
     "paid": "Paid",
     "paidOn": "Paid {date}",
