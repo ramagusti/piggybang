@@ -30,7 +30,8 @@ if changed piggybang-web; then
   cp -r public .next/standalone/
   cp -r .next/static .next/standalone/.next/
   cd ..
-  rsync -a --delete .web-build/.next/ piggybang-web/.next/
+  # The running server (www-data) may write its own cache there; leave it alone so ownership can't block the swap.
+  rsync -a --delete --exclude /standalone/.next/cache/ .web-build/.next/ piggybang-web/.next/
   sudo -n systemctl restart piggybang-web
 fi
 
