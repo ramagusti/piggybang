@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected function casts(): array
     {
-        return ['email_verified_at' => 'datetime', 'last_login_at' => 'datetime', 'password' => 'hashed'];
+        return ['email_verified_at' => 'datetime', 'last_login_at' => 'datetime', 'password' => 'hashed', 'tour_finished_at' => 'datetime'];
     }
 
     public function memberships(): HasMany

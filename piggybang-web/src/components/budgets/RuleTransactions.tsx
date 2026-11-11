@@ -22,19 +22,21 @@ export function RuleTransactions({ orgId, rule, onOpenChange }: { orgId: number;
       title={rule.name}
       description={data ? t("budgets.txSince", { date: f.date(data.period_start), total: f.money(data.total), count: data.transactions.length }) : undefined}
     >
-      {isLoading ? (
-        <LoadingSkeleton variant="list" count={4} />
-      ) : error ? (
-        <ErrorState onRetry={() => refetch()} />
-      ) : data && data.transactions.length > 0 ? (
-        <ul className="space-y-2">
-          {data.transactions.map((tx) => (
-            <TransactionCard key={tx.id} tx={tx} canWrite={false} onEdit={noop} onDelete={noop} />
-          ))}
-        </ul>
-      ) : (
-        <p className="py-6 text-center text-sm text-muted-foreground">{t("budgets.txNone")}</p>
-      )}
+      <div data-tour="rule-tx">
+        {isLoading ? (
+          <LoadingSkeleton variant="list" count={4} />
+        ) : error ? (
+          <ErrorState onRetry={() => refetch()} />
+        ) : data && data.transactions.length > 0 ? (
+          <ul className="space-y-2">
+            {data.transactions.map((tx) => (
+              <TransactionCard key={tx.id} tx={tx} canWrite={false} onEdit={noop} onDelete={noop} />
+            ))}
+          </ul>
+        ) : (
+          <p className="py-6 text-center text-sm text-muted-foreground">{t("budgets.txNone")}</p>
+        )}
+      </div>
     </ResponsiveModal>
   );
 }

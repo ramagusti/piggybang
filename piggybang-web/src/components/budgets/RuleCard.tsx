@@ -49,7 +49,7 @@ export function RuleCard({
 
   if (rule.type === "payday") {
     return (
-      <div className="card-hover rounded-xl border bg-surface p-5">
+      <div className="card-hover rounded-xl border bg-surface p-5" data-tour="payday-card">
         <div className="flex items-start gap-3">
           <span className="grid size-10 place-items-center rounded-lg bg-success-light text-success-dark">
             <Wallet className="size-5" aria-hidden />
@@ -96,6 +96,7 @@ export function RuleCard({
     <div
       className="card-hover space-y-3 rounded-xl border bg-surface p-5 cursor-pointer focus-visible:outline-2 focus-visible:outline-primary"
       role="button"
+      data-tour="budget-card"
       tabIndex={0}
       aria-label={t("budgets.showTx", { name: rule.name })}
       onClick={onOpen}

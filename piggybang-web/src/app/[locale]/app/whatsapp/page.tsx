@@ -88,7 +88,7 @@ export default function WhatsAppPage() {
   return (
     <>
       <PageHeader title={t("nav.whatsapp")} />
-      {body}
+      <div data-tour="wa-connect">{body}</div>
       <AllInConnectModal orgId={org.id} open={allInVisible} onOpenChange={setAllInOpen} />
       <ConfirmDialog
         open={confirmDisconnect}

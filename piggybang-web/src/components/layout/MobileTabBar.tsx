@@ -24,7 +24,7 @@ export function MobileTabBar() {
         {tabs.map(({ key, href, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
-            <Link key={key} href={href} aria-current={active ? "page" : undefined} className={cn(item, active ? "text-primary" : "text-muted-foreground")}>
+            <Link key={key} href={href} data-tour={`nav-${key}`} aria-current={active ? "page" : undefined} className={cn(item, active ? "text-primary" : "text-muted-foreground")}>
               <Icon className="size-5" aria-hidden />
               {t(`nav.${key}Short`)}
               {key === "transactions" && newTx > 0 && (
@@ -33,7 +33,7 @@ export function MobileTabBar() {
             </Link>
           );
         })}
-        <button type="button" onClick={() => setMore(true)} className={cn(item, moreActive ? "text-primary" : "text-muted-foreground")} aria-haspopup="dialog">
+        <button type="button" data-tour="nav-more" onClick={() => setMore(true)} className={cn(item, moreActive ? "text-primary" : "text-muted-foreground")} aria-haspopup="dialog">
           <MoreHorizontal className="size-5" aria-hidden />
           {t("nav.more")}
         </button>
@@ -47,7 +47,7 @@ export function MobileTabBar() {
           <ul className="grid grid-cols-3 gap-2 px-4">
             {rest.map(({ key, href, icon: Icon }) => (
               <li key={key}>
-                <Link href={href} onClick={() => setMore(false)} className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl bg-primary-bg/60 text-sm font-medium">
+                <Link href={href} data-tour={`nav-${key}`} onClick={() => setMore(false)} className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl bg-primary-bg/60 text-sm font-medium">
                   <Icon className="size-6 text-primary" aria-hidden />
                   {t(`nav.${key}`)}
                 </Link>

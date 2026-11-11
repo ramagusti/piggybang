@@ -41,7 +41,7 @@ export default function TeamPage() {
     <Tooltip>
       <TooltipTrigger asChild>
         <span tabIndex={atLimit ? 0 : -1}>
-          <Button disabled={atLimit} onClick={() => setInviteOpen(true)}>
+          <Button data-tour="team-invite" disabled={atLimit} onClick={() => setInviteOpen(true)}>
             <UserPlus /> {t("team.invite")}
           </Button>
         </span>

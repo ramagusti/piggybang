@@ -134,4 +134,26 @@ class AuthController extends Controller
 
         return ['user' => $request->user()];
     }
+
+    /**
+     * In-app tour progress. {step} while going through it; {status: completed|skipped, step} when it ends;
+     * {status: null} restarts it (Settings → replay).
+     */
+    public function tour(Request $request)
+    {
+        $data = $request->validate(['status' => 'sometimes|nullable|in:completed,skipped', 'step' => 'sometimes|nullable|string|max:40']);
+        $user = $request->user();
+        if (array_key_exists('status', $data)) {
+            $user->forceFill(['tour_status' => $data['status'], 'tour_finished_at' => $data['status'] ? now() : null]);
+            if (! $data['status']) {
+                $user->tour_step = null;
+            }
+        }
+        if (isset($data['step'])) {
+            $user->tour_step = $data['step'];
+        }
+        $user->save();
+
+        return ['user' => $user];
+    }
 }

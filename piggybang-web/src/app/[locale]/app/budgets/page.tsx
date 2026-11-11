@@ -31,7 +31,7 @@ export default function BudgetsPage() {
   const remove = useOrgMutation(org.id, (r: Rule) => api(`/organizations/${org.id}/rules/${r.id}`, { method: "DELETE" }));
 
   const add = canWrite && (
-    <Button onClick={() => setForm({ open: true })}>
+    <Button data-tour="rule-new" onClick={() => setForm({ open: true })}>
       <Plus /> {t("budgets.newRule")}
     </Button>
   );
@@ -41,7 +41,7 @@ export default function BudgetsPage() {
       <PageHeader title={t("nav.budgets")} actions={add} />
       <Tabs value={tab} onValueChange={(v) => setTab(v as RuleType)}>
         <TabsList>
-          <TabsTrigger value="weekly_limit">
+          <TabsTrigger value="weekly_limit" data-tour="tab-weekly">
             <CalendarDays />
             {t("budgets.weekly")}
           </TabsTrigger>
@@ -49,7 +49,7 @@ export default function BudgetsPage() {
             <Calendar />
             {t("budgets.monthly")}
           </TabsTrigger>
-          <TabsTrigger value="payday">
+          <TabsTrigger value="payday" data-tour="tab-payday">
             <Wallet />
             {t("budgets.payday")}
           </TabsTrigger>

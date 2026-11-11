@@ -20,6 +20,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
           <li key={key}>
             <Link
               href={href}
+              data-tour={`nav-${key}`}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               title={collapsed ? t(`nav.${key}`) : undefined}

@@ -5,6 +5,7 @@ import { Piggy } from "@/components/piggy/Piggy";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { InstallButton } from "@/components/shared/InstallButton";
 import { ErrorState } from "@/components/shared/ErrorBoundary";
+import { Tour } from "@/components/tour/Tour";
 import { Button } from "@/components/ui/button";
 import { useCurrentOrg } from "@/hooks/api";
 import { useRealtime } from "@/hooks/use-realtime";
@@ -119,6 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <MobileTabBar />
       <InstallButton />
+      <Tour />
     </OrgContext.Provider>
   );
 }

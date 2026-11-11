@@ -11,6 +11,7 @@ import { OrganizationTab } from "@/components/settings/OrganizationTab";
 import { ProfileTab } from "@/components/settings/ProfileTab";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReplayTour } from "@/components/tour/Tour";
 import { useMe } from "@/hooks/api";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
@@ -50,6 +51,7 @@ function SettingsTabs() {
       </TabsList>
       <TabsContent value="profile" className="pt-4">
         {me ? <ProfileTab user={me.user} /> : <LoadingSkeleton />}
+        <ReplayTour />
       </TabsContent>
       <TabsContent value="organization" className="pt-4">
         <OrganizationTab key={org.id} org={org} isPro={isPro} />

@@ -21,6 +21,8 @@ export interface User {
   locale: "id" | "en";
   timezone: string;
   email_verified_at: string | null;
+  tour_status: "completed" | "skipped" | null; // null = in-app tour not finished yet
+  tour_step: string | null;
 }
 
 export interface Organization {

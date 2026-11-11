@@ -130,7 +130,7 @@ export default function TransactionsPage() {
         />
       ) : (
         <>
-          <div className="hidden md:block">
+          <div className="hidden md:block" data-tour="tx-list">
             <TransactionTable
               transactions={list}
               canWrite={canWrite}
@@ -141,7 +141,7 @@ export default function TransactionsPage() {
               onDelete={setConfirming}
             />
           </div>
-          <ul className="space-y-2 md:hidden">
+          <ul className="space-y-2 md:hidden" data-tour="tx-list">
             {list.map((tx) => (
               <TransactionCard
                 key={tx.id}

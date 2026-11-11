@@ -66,6 +66,7 @@ export function RuleForm({
     <ResponsiveModal open={open} onOpenChange={onOpenChange} title={rule ? t("budgets.editRule") : t("budgets.newRule")}>
       <form
         className="space-y-4"
+        data-tour="rule-form"
         onSubmit={async (e) => {
           e.preventDefault();
           await save.mutateAsync();
@@ -89,7 +90,7 @@ export function RuleForm({
           <Label htmlFor="rule-name">{t("budgets.ruleName")}</Label>
           <Input id="rule-name" required value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1" data-tour="rule-ai">
           <div className="flex min-h-11 items-center justify-between gap-3">
             <Label htmlFor="rule-ai">{t("budgets.aiAssignLabel")}</Label>
             <Switch id="rule-ai" checked={aiAssign} onCheckedChange={setAiAssign} />
@@ -98,13 +99,13 @@ export function RuleForm({
             {t(payday ? (aiAssign ? "budgets.aiPaydayOnHint" : "budgets.aiPaydayOffHint") : aiAssign ? "budgets.aiAssignOnHint" : "budgets.aiAssignOffHint")}
           </p>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5" data-tour="rule-cat">
           <Label htmlFor="rule-cat">{t("tx.category")}</Label>
           <CategoryPicker id="rule-cat" categories={categories} value={categoryId} onChange={setCategoryId} onClear={() => setCategoryId(null)} />
           {!payday && <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiCategoryHint" : "budgets.categoryHint")}</p>}
         </div>
         {!payday && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-tour="rule-kw">
             <Label htmlFor="rule-limit-kw">{t("budgets.limitKeywords")}</Label>
             <Input id="rule-limit-kw" placeholder="bensin, pertalite, -angin" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
             <p className="text-xs text-muted-foreground">{t(aiAssign ? "budgets.aiKeywordsHint" : "budgets.limitKeywordsHint")}</p>

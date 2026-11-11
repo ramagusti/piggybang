@@ -83,7 +83,7 @@ export default function DashboardPage() {
   const { kpi } = data;
   const savingsNum = Number(kpi.savings);
   const addButton = can("transactions.write") && (
-    <Button size="sm" onClick={() => setFormOpen(true)}>
+    <Button size="sm" data-tour="tx-add" onClick={() => setFormOpen(true)}>
       <Plus /> {t("tx.add")}
     </Button>
   );
@@ -92,7 +92,7 @@ export default function DashboardPage() {
     return (
       <>
         {header}
-        <Card>
+        <Card data-tour="summary">
           <EmptyState
             piggy="wave"
             title={t("dashboard.emptyTitle")}
@@ -100,7 +100,7 @@ export default function DashboardPage() {
             action={
               <>
                 {can("transactions.write") && (
-                  <Button onClick={() => setFormOpen(true)}>
+                  <Button data-tour="tx-add" onClick={() => setFormOpen(true)}>
                     <Plus /> {t("tx.add")}
                   </Button>
                 )}
@@ -122,7 +122,7 @@ export default function DashboardPage() {
     <>
       {header}
 
-      <section className="grid gap-4 sm:grid-cols-3" aria-label={t("dashboard.summary")}>
+      <section className="grid gap-4 sm:grid-cols-3" aria-label={t("dashboard.summary")} data-tour="summary">
         <Card className="card-hover">
           <CardContent className="space-y-2">
             <p className="flex items-center gap-2 text-sm text-muted-foreground">

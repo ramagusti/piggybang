@@ -175,7 +175,7 @@ export function TransactionForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4" noValidate>
+    <form onSubmit={submit} className="space-y-4" noValidate data-tour="tx-form">
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium">{t("tx.type")}</legend>
         <div

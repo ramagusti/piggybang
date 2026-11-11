@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('auth/verify-email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:auth');
     Route::get('user', [AuthController::class, 'me']);
     Route::patch('user', [AuthController::class, 'updateMe']);
+    Route::patch('user/tour', [AuthController::class, 'tour']);
     Route::get('push/key', [PushController::class, 'key']);
     Route::post('push/subscriptions', [PushController::class, 'subscribe']);
     Route::delete('push/subscriptions', [PushController::class, 'unsubscribe']);
