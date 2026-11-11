@@ -8,6 +8,8 @@
 !/docker-compose.yml
 !/piggybang-api/
 !/piggybang-web/
+!/.github/
+!/deploy.sh
 
 # Secrets: never commit, anywhere in the repo (applies inside the projects too; rules below win over the list above).
 .env
