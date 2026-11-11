@@ -15,6 +15,7 @@ use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Str;
 use Minishlink\WebPush\VAPID;
 
 // Spec §8. Run `php artisan schedule:work` (dev) or cron `* * * * * php artisan schedule:run` (prod).
@@ -83,6 +84,23 @@ Artisan::command('budgets:assign {org? : team id; default all teams with AI rule
         }
     }
 })->purpose("Let the AI (re)file this cycle's transactions into AI budgets and payday rules, and show the result");
+
+Artisan::command('plan:grant {org : team id} {tier=max : pro|plus|max} {--months=1}', function (string $org, string $tier) {
+    if (! config("billing.tiers.$tier")) {
+        $this->error("Unknown tier '$tier'. Use: ".implode(', ', array_keys(config('billing.tiers'))));
+
+        return 1;
+    }
+    $team = Organization::findOrFail($org);
+    $team->subscriptions()->whereIn('status', ['active', 'past_due', 'trialing'])->update(['status' => 'canceled']);
+    $sub = $team->subscriptions()->create([
+        'provider' => 'manual', 'provider_subscription_id' => 'manual-'.Str::uuid(), 'provider_customer_id' => 'manual',
+        'plan' => 'pro', 'tier' => $tier, 'interval' => 'monthly', 'status' => 'active',
+        'current_period_start' => now(), 'current_period_end' => now()->addMonths((int) $this->option('months')),
+    ]);
+    BillingService::sync($sub);
+    $this->info("{$team->name}: ".config("billing.tiers.$tier.name")." until {$sub->current_period_end->toDateString()} (bot replies: {$team->fresh()->bot_quota}).");
+})->purpose('Give a team a paid tier without payment (expires by itself after --months)');
 
 Artisan::command('push:test {email}', function (string $email) {
     $user = User::where('email', $email)->firstOrFail();

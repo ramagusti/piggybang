@@ -66,9 +66,11 @@ class OrganizationService
     public static function assertSeatAvailable(Organization $org): void
     {
         if ($org->seatsUsed() >= $org->memberCap()) {
-            throw self::planLimit($org->isPro()
-                ? 'Batas anggota tercapai. Tambah kursi di Penagihan.'
-                : 'Batas anggota Free tercapai. Upgrade ke Pro.');
+            throw self::planLimit(match (true) {
+                $org->plan === 'pro' => 'Batas anggota tercapai. Tambah kursi di Penagihan.',
+                $org->isTrialing() => 'Selama trial, tim maksimal 2 orang. Berlangganan Pro untuk mengundang lebih banyak.',
+                default => 'Batas anggota Free tercapai. Upgrade ke Pro.',
+            });
         }
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
+use App\Services\BillingService;
 use App\Services\OrganizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -28,6 +29,26 @@ class PlanLimitTest extends TestCase
         $this->deleteJson("/api/organizations/{$org->id}/members/{$pending->id}")->assertNotFound();
         $this->deleteJson("/api/organizations/{$org->id}/members/{$pending->id}?pending=1")->assertNoContent();
         $this->deleteJson("/api/organizations/{$org->id}/members/{$owner->id}")->assertStatus(422); // owner immutable
+    }
+
+    public function test_trial_keeps_two_member_cap_and_granted_plan_expires(): void
+    {
+        Notification::fake();
+        [$owner, $org] = $this->makeOrg('trial');
+        Sanctum::actingAs($owner, ['*']);
+        $this->postJson("/api/organizations/{$org->id}/invite", ['email' => 'one@test.com', 'role' => 'member'])->assertCreated();
+        $this->postJson("/api/organizations/{$org->id}/invite", ['email' => 'two@test.com', 'role' => 'member'])
+            ->assertStatus(422)->assertJsonPath('code', 'plan_limit')->assertJsonPath('message', 'Selama trial, tim maksimal 2 orang. Berlangganan Pro untuk mengundang lebih banyak.');
+
+        $this->artisan('plan:grant', ['org' => $org->id, 'tier' => 'max'])->assertSuccessful();
+        $org->refresh();
+        $this->assertSame(['pro', 5, 350], [$org->plan, $org->memberCap(), $org->botQuota()]);
+        $this->assertSame('max', $this->getJson("/api/organizations/{$org->id}/subscription")->json('tier'));
+        $this->postJson("/api/organizations/{$org->id}/invite", ['email' => 'two@test.com', 'role' => 'member'])->assertCreated();
+
+        $this->travel(32)->days();
+        BillingService::runXenditLifecycle();
+        $this->assertSame('free', $org->fresh()->plan);
     }
 
     public function test_free_category_cap_is_15_per_type(): void

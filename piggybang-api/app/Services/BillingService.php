@@ -349,9 +349,13 @@ class BillingService
         self::sync($sub);
     }
 
-    /** Daily: issue renewal invoices 3 days before period end; expire lapsed subscriptions. */
+    /** Daily: issue renewal invoices 3 days before period end; expire lapsed subscriptions (incl. plans granted by hand). */
     public static function runXenditLifecycle(): void
     {
+        foreach (Subscription::where('provider', 'manual')->where('status', 'active')->where('current_period_end', '<', now())->get() as $sub) {
+            $sub->update(['status' => 'canceled']);
+            self::sync($sub);
+        }
         foreach (Subscription::where('provider', 'xendit')->whereIn('status', ['active', 'past_due'])->get() as $sub) {
             $end = $sub->current_period_end;
             if ($sub->cancel_at_period_end && $end->isPast()) {

@@ -105,9 +105,10 @@ class Organization extends Model
         return $this->effectivePlan() === 'pro';
     }
 
+    /** Paid plans only: the Pro trial keeps the free cap, so nobody is left over the limit when it ends. */
     public function memberCap(): int
     {
-        return $this->isPro() ? max($this->member_limit, self::PRO_INCLUDED_MEMBERS) : self::FREE_MEMBER_LIMIT;
+        return $this->plan === 'pro' ? max($this->member_limit, self::PRO_INCLUDED_MEMBERS) : self::FREE_MEMBER_LIMIT;
     }
 
     public function categoryCap(): ?int
