@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { RuleCard } from "@/components/budgets/RuleCard";
 import { RuleForm } from "@/components/budgets/RuleForm";
 import { RuleHelp } from "@/components/budgets/RuleHelp";
+import { RuleTransactions } from "@/components/budgets/RuleTransactions";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorBoundary";
@@ -23,6 +24,7 @@ export default function BudgetsPage() {
   const [tab, setTab] = useState<RuleType>("weekly_limit");
   const [form, setForm] = useState<{ open: boolean; rule?: Rule }>({ open: false });
   const [deleting, setDeleting] = useState<Rule | null>(null);
+  const [viewing, setViewing] = useState<Rule | null>(null);
   const { data = [], isLoading, error, refetch } = useRules(org.id);
   const canWrite = can("rules.write");
   const list = data.filter((r) => r.type === tab);
@@ -64,10 +66,18 @@ export default function BudgetsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {list.map((r) => (
-            <RuleCard key={r.id} rule={r} canWrite={canWrite} onEdit={() => setForm({ open: true, rule: r })} onDelete={() => setDeleting(r)} />
+            <RuleCard
+              key={r.id}
+              rule={r}
+              canWrite={canWrite}
+              onEdit={() => setForm({ open: true, rule: r })}
+              onDelete={() => setDeleting(r)}
+              onOpen={() => setViewing(r)}
+            />
           ))}
         </div>
       )}
+      {viewing && <RuleTransactions orgId={org.id} rule={viewing} onOpenChange={(o) => !o && setViewing(null)} />}
       {form.open && <RuleForm key={form.rule?.id ?? `new-${tab}`} orgId={org.id} rule={form.rule} defaultType={tab} open onOpenChange={(open) => setForm({ open })} />}
       <ConfirmDialog
         open={!!deleting}

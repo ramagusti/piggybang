@@ -35,6 +35,7 @@ export const queryKeys = {
   savingsHistory: (orgId: number) => ["organizations", orgId, "savings", "history"] as const,
   bills: (orgId: number) => ["organizations", orgId, "bills"] as const,
   rules: (orgId: number) => ["organizations", orgId, "rules"] as const,
+  ruleTransactions: (orgId: number, ruleId: number) => ["organizations", orgId, "rules", ruleId, "transactions"] as const,
   subscription: (orgId: number) => ["organizations", orgId, "subscription"] as const,
   whatsapp: (orgId: number) => ["organizations", orgId, "whatsapp"] as const,
   apiTokens: (orgId: number) => ["organizations", orgId, "api-tokens"] as const,
@@ -87,6 +88,13 @@ export const useCategories = (orgId: number, type?: TxType) =>
 
 export const useRules = (orgId: number) =>
   useQuery({ queryKey: queryKeys.rules(orgId), queryFn: () => api<Rule[]>(orgPath(orgId, "/rules")) });
+
+/** Expenses counting toward a budget since the start of the payday cycle. */
+export const useRuleTransactions = (orgId: number, ruleId: number) =>
+  useQuery({
+    queryKey: queryKeys.ruleTransactions(orgId, ruleId),
+    queryFn: () => api<{ period_start: string; total: string; transactions: Transaction[] }>(orgPath(orgId, `/rules/${ruleId}/transactions`)),
+  });
 
 export const useSavings = (orgId: number) =>
   useQuery({ queryKey: queryKeys.savings(orgId), queryFn: () => api<SavingsCurrent>(orgPath(orgId, "/savings")) });

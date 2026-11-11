@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\RuleResource;
+use App\Http\Resources\TransactionResource;
 use App\Jobs\AssignBudget;
+use App\Models\ExchangeRate;
 use App\Models\Organization;
 use App\Models\UserRule;
+use App\Services\BudgetService;
+use App\Services\Money;
+use App\Services\PaydayService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,6 +21,23 @@ class RuleController extends Controller
         $type = $request->validate(['type' => 'nullable|in:weekly_limit,monthly_limit,payday'])['type'] ?? null;
 
         return RuleResource::collection($org->rules()->with('category')->when($type, fn ($q) => $q->where('type', $type))->orderBy('id')->get());
+    }
+
+    /** The expenses counting toward a budget from the start of the payday cycle until now (same matching as its progress). */
+    public function transactions(Organization $org, UserRule $rule)
+    {
+        abort_unless(in_array($rule->type, ['weekly_limit', 'monthly_limit'], true), 404);
+        [$start] = PaydayService::cycle($org);
+        $txs = $org->transactions()->with('category', 'user')->where('type', 'expense')
+            ->whereBetween('transaction_time', [$start->utc(), now()])->latest('transaction_time')->get()
+            ->filter(fn ($tx) => BudgetService::matches($rule, $tx->category_id, $tx->description, BudgetService::budgetOf($tx->metadata)))
+            ->values();
+
+        return [
+            'period_start' => $start->toIso8601String(),
+            'total' => Money::fmt($txs->sum(fn ($tx) => (float) $tx->amount * ExchangeRate::rate($tx->currency, $org->currency()))),
+            'transactions' => TransactionResource::collection($txs),
+        ];
     }
 
     public function store(Request $request, Organization $org)

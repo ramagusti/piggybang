@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
             Route::get('members', [MemberController::class, 'index']);
             Route::get('categories', [CategoryController::class, 'index']);
             Route::get('rules', [RuleController::class, 'index']);
+            Route::get('rules/{rule}/transactions', [RuleController::class, 'transactions']);
             Route::get('transactions', [TransactionController::class, 'index']);
             Route::get('transactions/{transaction}', [TransactionController::class, 'show']);
             Route::get('savings', [SavingsController::class, 'current']);

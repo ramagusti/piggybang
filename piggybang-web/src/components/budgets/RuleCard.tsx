@@ -31,7 +31,19 @@ function Actions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => voi
   );
 }
 
-export function RuleCard({ rule, canWrite, onEdit, onDelete }: { rule: Rule; canWrite: boolean; onEdit: () => void; onDelete: () => void }) {
+export function RuleCard({
+  rule,
+  canWrite,
+  onEdit,
+  onDelete,
+  onOpen,
+}: {
+  rule: Rule;
+  canWrite: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onOpen?: () => void; // budgets: show the transactions counting toward it
+}) {
   const t = useTranslations();
   const f = useFormat();
 
@@ -81,7 +93,19 @@ export function RuleCard({ rule, canWrite, onEdit, onDelete }: { rule: Rule; can
   const level = budgetLevel(p?.percent ?? (effective ? (spent / effective) * 100 : 0));
 
   return (
-    <div className="card-hover space-y-3 rounded-xl border bg-surface p-5">
+    <div
+      className="card-hover space-y-3 rounded-xl border bg-surface p-5 cursor-pointer focus-visible:outline-2 focus-visible:outline-primary"
+      role="button"
+      tabIndex={0}
+      aria-label={t("budgets.showTx", { name: rule.name })}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onOpen?.();
+        }
+      }}
+    >
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="flex items-center gap-2 font-semibold">
@@ -107,7 +131,12 @@ export function RuleCard({ rule, canWrite, onEdit, onDelete }: { rule: Rule; can
             </p>
           )}
         </div>
-        {canWrite && <Actions onEdit={onEdit} onDelete={onDelete} />}
+        {canWrite && (
+          // The menu (and its portal, which still bubbles through React) must not also open the transactions list.
+          <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+            <Actions onEdit={onEdit} onDelete={onDelete} />
+          </div>
+        )}
       </div>
       <BudgetProgress spent={spent} limit={effective} label={rule.name} />
       <p className="text-sm tabular-nums">

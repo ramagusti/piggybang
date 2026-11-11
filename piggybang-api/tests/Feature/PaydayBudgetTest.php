@@ -152,6 +152,30 @@ class PaydayBudgetTest extends TestCase
         $this->assertSame(['Beauty fund' => '190000.00', 'Health fund (vitamins)' => '80000.00'], $spent());
     }
 
+    public function test_budget_lists_its_transactions_since_payday(): void
+    {
+        [$owner, $org] = $this->makeOrg();
+        $food = $this->cat($org, 'Food & Beverages');
+        $daily = $org->rules()->create(['name' => 'Makan harian', 'type' => 'weekly_limit', 'limit_amount' => 500000, 'category_id' => $food->id, 'ai_assign' => true]);
+        $family = $org->rules()->create(['name' => 'Makan besar keluarga', 'type' => 'monthly_limit', 'limit_amount' => 2000000, 'category_id' => $food->id, 'ai_assign' => true]);
+        $entry = fn ($desc, $amount, $budget, $at) => ['type' => 'expense', 'category' => ['id' => $food->id], 'description' => $desc,
+            'value' => ['amount' => $amount], 'datetime' => $at->toIso8601String(), 'budget_id' => $budget];
+        [$start] = PaydayService::cycle($org);
+        EntryIngestionService::ingest($org, [
+            $entry('makan siang', 25000, $daily->id, now()),
+            $entry('nasi goreng', 20000, $daily->id, $start->addHour()),           // earlier week, same cycle → listed
+            $entry('makan malam keluarga', 450000, $family->id, now()),
+            $entry('bulan lalu', 30000, $daily->id, $start->subDay()),            // previous cycle → not listed
+        ], $owner);
+        Sanctum::actingAs($owner, ['*']);
+
+        $res = $this->getJson("/api/organizations/{$org->id}/rules/{$daily->id}/transactions")->assertOk();
+        $this->assertSame(['makan siang', 'nasi goreng'], array_column($res->json('transactions'), 'description'));
+        $this->assertSame('45000.00', $res->json('total'));
+        $payday = $org->rules()->create(['name' => 'Gaji', 'type' => 'payday', 'limit_amount' => 0, 'date_condition' => '1']);
+        $this->getJson("/api/organizations/{$org->id}/rules/{$payday->id}/transactions")->assertNotFound();
+    }
+
     public function test_excluded_keywords(): void
     {
         [$owner, $org] = $this->makeOrg();
